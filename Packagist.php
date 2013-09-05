@@ -84,7 +84,7 @@ class Packagist extends AbstractCommand
     "type": "library",
     "description": "DESCRIPTION",
     "keywords": ["FOO", "BAR", "BAZ"],
-    "homepage": "http://auraphp.github.com/{$repo}",
+    "homepage": "http://auraphp.com/package/{$repo}",
     "license": "BSD-2-Clause",
     "authors": [
         {
