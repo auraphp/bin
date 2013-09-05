@@ -16,6 +16,7 @@ $commands = [
     'package' => 'Package',
     'system-status' => 'SystemStatus',
     'travis' => 'Travis',
+    'packagist' => 'Packagist',
 ];
 
 // config file
@@ -33,10 +34,16 @@ spl_autoload_register(function ($class) {
 // shift off the script name
 array_shift($argv);
 
-// does the command exist?
+// was a command specified?
 $name = array_shift($argv);
-if (! isset($commands[$name])) {
+if (! $name) {
     echo "Command not specified." . PHP_EOL;
+    exit(1);
+}
+
+// does the command exist?
+if (! isset($commands[$name])) {
+    echo "Command not recognized." . PHP_EOL;
     exit(1);
 }
 

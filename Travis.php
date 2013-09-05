@@ -29,7 +29,6 @@ class Travis extends AbstractCommand
     
     protected function checkHook()
     {
-        // the repo name
         $repo = basename(getcwd());
         $this->out("Checking hook on {$repo} ... ");
         
