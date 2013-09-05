@@ -9,13 +9,21 @@
 // strictest error reporting
 error_reporting(E_ALL);
 
-// get the github authorization string
-$file = $_SERVER['HOME'] . '/.aura/github-auth';
-if (! file_exists($file) || ! is_readable($file)) {
+// name => class
+$commands = [
+    'repos' => 'Repos',
+    'issues' => 'Issues',
+    'package' => 'Package',
+    'system-status' => 'SystemStatus',
+    'travis' => 'Travis',
+];
+
+// config file
+$config_file = $_SERVER['HOME'] . '/.aurarc';
+if (! file_exists($config_file) || ! is_readable($config_file)) {
     echo "Please create '$file' with your github username:password authorization." . PHP_EOL;
     die(1);
 }
-$github_auth = file_get_contents($file);
 
 // autoloading
 spl_autoload_register(function ($class) {
@@ -24,14 +32,6 @@ spl_autoload_register(function ($class) {
 
 // shift off the script name
 array_shift($argv);
-
-// name => class
-$commands = [
-    'repos' => 'Repos',
-    'issues' => 'Issues',
-    'package' => 'Package',
-    'system-status' => 'SystemStatus',
-];
 
 // does the command exist?
 $name = array_shift($argv);
@@ -48,6 +48,7 @@ if (! class_exists($class)) {
 }
 
 // instantiate and invoke the class with modified argv
-$command = new $class($github_auth);
+$config = new Config(parse_ini_file($config_file));
+$command = new $class($config);
 $command($argv);
 exit(0);

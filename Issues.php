@@ -14,26 +14,26 @@ class Issues extends AbstractCommand
             }
         }
         
-		$issues = [];
+        $issues = [];
         foreach ($list as $name) {
             $issues[$name] = $this->apiGetIssues($name);
         }
         
         if (! $issues) {
-			$this->outln("No issues found.");
+            $this->outln("No issues found.");
             exit(0);
         }
         
-		foreach ($list as $name) {
-			if (! $issues[$name]) {
-				continue;
-			}
-			$this->outln($name . ':');
-			foreach ($issues[$name] as $issue) {
-				$this->outln('    ' . $issue->number . '. ' . $issue->title);
-				$this->outln('    ' . $issue->html_url);
-				$this->outln();
-			}
-		}
-	}
+        foreach ($list as $name) {
+            if (! $issues[$name]) {
+                continue;
+            }
+            $this->outln($name . ':');
+            foreach ($issues[$name] as $issue) {
+                $this->outln('    ' . $issue->number . '. ' . $issue->title);
+                $this->outln('    ' . $issue->html_url);
+                $this->outln();
+            }
+        }
+    }
 }

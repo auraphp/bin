@@ -1,11 +1,11 @@
 <?php
 abstract class AbstractCommand
 {
-    protected $github_auth;
+    protected $config;
     
-    public function __construct($github_auth)
+    public function __construct(Config $config)
     {
-        $this->github_auth = $github_auth;
+        $this->config = $config;
     }
     
     protected function out($str = null)
@@ -13,11 +13,11 @@ abstract class AbstractCommand
         echo $str;
     }
     
-	protected function outln($str = null)
-	{
-		$this->out($str . PHP_EOL);
-	}
-	
+    protected function outln($str = null)
+    {
+        $this->out($str . PHP_EOL);
+    }
+    
     protected function shell($cmd, &$output = null, &$return = null)
     {
         $cmd = str_replace('; ', ';\\' . PHP_EOL . '    ', $cmd);
@@ -31,7 +31,11 @@ abstract class AbstractCommand
     
     protected function api($method, $path, $body = null)
     {
-        $api = "https://{$this->github_auth}@api.github.com";
+        $github_auth = $this->config->github_user
+                     . ':'
+                     . $this->config->github_pass;
+                     
+        $api = "https://{$github_auth}@api.github.com";
         $url = $api . $path;
         $context = stream_context_create([
             'http' => [
@@ -45,6 +49,11 @@ abstract class AbstractCommand
         $json = file_get_contents($url, FALSE, $context);
         $data = json_decode($json);
         return $data;
+    }
+    
+    protected function isReadableFile($file)
+    {
+        return file_exists($file) && is_readable($file);
     }
     
     protected function apiGetRepos()
