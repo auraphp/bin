@@ -42,8 +42,10 @@ abstract class AbstractCommand
                 'method' => $method,
                 'header' => implode("\r\n", [
                     'User-Agent: php/5.4',
-                    'Accept: application/json'
+                    'Accept: application/json',
+                    'Content-Type: application/json',
                 ]),
+                'content' => $body,
             ],
         ]);
         $json = file_get_contents($url, FALSE, $context);
