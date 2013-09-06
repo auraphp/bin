@@ -104,6 +104,7 @@ class ReleasePages extends AbstractCommand
         $text = "---" . PHP_EOL
                 . "title: Aura for PHP -- {$this->package} {$this->version}" . PHP_EOL
                 . "layout: site" . PHP_EOL
+                . "active: packages" . PHP_EOL
                 . "---" . PHP_EOL
                 . PHP_EOL
                 . $text . PHP_EOL;
@@ -136,6 +137,7 @@ class ReleasePages extends AbstractCommand
             "---",
             "title: Aura for PHP -- {$this->package}",
             "layout: site",
+            "active: packages",
             "---",
             "",
             $this->package,
