@@ -1,27 +1,25 @@
 <?php
 /**
  * 
- * USE ONLY FROM THE RELEASE REPO:
+ * - `aura release` to preflight on the current branch
  * 
- * - `aura package Vendor.Package` to run tests and docs
+ * - `aura release $branch` to preflight on $branch
  * 
- * - `aura package Vendor.Package 1.0.0-beta2` to do a packaging dry-run
+ * - `aura release $branch $version` to dry run and check composer
  * 
- * - `aura package Vendor.Package 1.0.0-beta2 release` to package, make docs,
- *   commit, tag, push, and release
+ * - `aura release $branch $version commit` to merge $version to master and
+ *   tag it as $version.  HEY NOW: GITHUB RELEASES. Does this mean we can
+ *   avoid the whole merge-to-master thing?  What does "master" mean in that
+ *   case anyway?
  * 
  */
-class Package extends AbstractCommand
+class Release extends AbstractCommand
 {
     protected $package;
     
-    protected $repo;
-    
-    protected $docs;
+    protected $branch;
     
     protected $version;
-    
-    protected $release = false;
     
     protected $authors;
     
@@ -39,235 +37,199 @@ class Package extends AbstractCommand
     
     protected $composer_json;
     
-    public function exec()
+    public function __invoke($argv)
     {
-        $this->setArgs();
-        $this->setRepo();
-        $this->setDocs();
+        $this->prep($argv);
         
-        $this->execPrelim();
+        $this->gitCheckout();
+        $this->gitPull();
+        $this->runTests();
+        $this->validateDocs();
+        $this->touchSupportFiles();
+        $this->checkChanges();
+        $this->gitStatus();
+        
+        // check travis
+        // check packagist
+        
         if (! $this->version) {
-          $this->outln("No packaging, no release.");
-          $this->outln("Done!");
-          exit(0);
+            $this->outln("No version specified; done.");
+            exit(0);
         }
         
-        $this->outln("Package version '{$this->version}' with pages.");
-        $this->execPackage();
-        $this->execPages();
-        $this->outln("Done with package and pages.");
+        $this->outln("Prepare composer.json file for {$this->version}.");
+        $this->fetchMeta();
+        $this->fetchReadme();
+        $this->gitBranchVersion();
+        $this->writeComposer();
         
-        if (! $this->release) {
-            $this->outln("Release not requested.");
-            $this->outln("Package and pages remain for inspection.");
-            $this->outln("To kill off the package and pages, issue:");
-            $this->outln("    cd {$this->repo}; \\");
+        if (! $this->commit == 'commit') {
+            $this->outln("Not committing to the release.");
+            $this->outln("Currently on version branch.");
+            $this->outln("To kill off the branch, issue:");
             $this->outln("    git reset --hard HEAD; \\");
             $this->outln("    git checkout develop; \\");
             $this->outln("    git branch -D {$this->version}; \\");
-            $this->outln("    cd ../..");
             $this->outln("Done!");
             exit(0);
         }
         
-        $this->outln("Release: commit pages, merge master, tag, and push.");
-        $this->execRelease();
-        $this->outln("Done!");
-        exit(0);
+        // $this->outln("Release: commit, merge, tag, and push.");
+        // $this->execRelease();
+        // $this->outln("Done!");
+        // exit(0);
     }
     
-    protected function execPrelim()
+    protected function prep($argv)
     {
-        $this->gitCloneOrPull();
-        $this->gitDevelop();
-        $this->runTests();
-        $this->writeDocs();
-        $this->checkMeta();
-        $this->checkReadme();
-        $this->checkChanges();
+        $this->package = basename(getcwd());
+        $this->outln("Package: {$this->package}'");
+        
+        $this->branch = array_shift($argv);
+        if (! $this->branch) {
+            $this->branch = $this->gitCurrentBranch();
+        }
+        $this->outln("Branch: {$this->branch}");
+        
+        $this->version = array_shift($argv);
+        if (! $this->version) {
+            $this->outln('Pre-flight.');
+            return;
+        }
+        
+        $format = '^(\d+.\d+.\d+)(-(dev|alpha\d+|beta\d+|RC\d+))?$';
+        preg_match("/$format/", $this->version, $matches);
+        $valid_version = (bool) $matches;
+        
+        if (! $valid_version) {
+            $this->outln("Version '{$this->version}' invalid.");
+            $this->outln("Please use the format '0.1.5(-dev|-alpha0|-beta1|-RC5)'.");
+            exit(1);
+        }
+        
+        $this->outln("Version: {$this->version}");
+        
+        $this->commit = array_shift($argv);
     }
     
-    protected function execPackage()
+    protected function gitCurrentBranch()
     {
-        $this->fetchMeta();
-        $this->fetchReadme();
-        $this->gitStatus();
-        $this->gitBranchVersion();
-        $this->writeComposer();
+        $branch = exec('git rev-parse --abbrev-ref HEAD', $output, $return);
+        if ($return) {
+            $this->outln(implode(PHP_EOL, $output));
+            exit($return);
+        }
+        return trim($branch);
     }
     
-    protected function execPages()
+    protected function gitCheckout()
     {
-        $this->gitBranchPages();
-        $this->moveVersionDocs();
-        $this->writeVersionIndex();
-        $this->gitAddVersionDocsAndIndex();
-        $this->writePagesIndex();
+        if ($this->branch == $this->gitCurrentBranch()) {
+            $this->outln("Already on branch {$this->branch}.");
+            return;
+        }
+        
+        $this->outln("Checkout {$this->branch}.");
+        $this->shell("git checkout {$this->branch}", $output, $return);
+        if ($return) {
+            exit($return);
+        }
+    }
+    
+    protected function gitPull()
+    {
+        $this->outln("Pull {$this->branch}.");
+        $this->shell("git pull", $output, $return);
+        if ($return) {
+            exit($return);
+        }
     }
     
     protected function execRelease()
     {
-        // currently on gh-pages; commit them
-        $this->shell("cd {$this->repo}; git commit -a --message='updated docs for {$this->version}'");
-        
         // switch to master
-        $this->shell("cd {$this->repo}; git checkout master");
+        $this->shell("git checkout master");
         
         // copy over existing composer.json because we get so many merge 
         // conflicts each time, then commit it
         $file = $this->repo . DIRECTORY_SEPARATOR . 'composer.json';
         file_put_contents($file, $this->composer_json);
-        $this->shell("cd {$this->repo}; git commit composer.json --message=\"update composer with new version\"");
+        $this->shell("git commit composer.json --message=\"update composer with new version\"");
         
         // now merge from the version branch
-        $this->shell("cd {$this->repo}; git merge --no-ff {$this->version}", $output, $return);
+        $this->shell("git merge --no-ff {$this->version}", $output, $return);
         if ($return) {
             $this->outln('Something went wrong.');
             exit($return);
         }
         
         // delete the version branch
-        $this->shell("cd {$this->repo}; git branch -d {$this->version}", $output, $return);
+        $this->shell("git branch -d {$this->version}", $output, $return);
         if ($return) {
             $this->outln('Something went wrong.');
             exit($return);
         }
         
         // tag the version
-        $this->shell("cd {$this->repo}; git tag -a '{$this->version}' -m '{$this->version}'");
+        $this->shell("git tag -a '{$this->version}' -m '{$this->version}'");
         
         // push tagged version
-        $this->shell("cd {$this->repo}; git push --tags");
+        $this->shell("git push --tags");
         
         // push master
-        $this->shell("cd {$this->repo}; git push");
-        
-        // push pages
-        $this->shell("cd {$this->repo}; git push origin gh-pages");
+        $this->shell("git push");
         
         // back to develop
-        $this->shell("cd {$this->repo}; git checkout develop");
-    }
-    
-    protected function setArgs($argv)
-    {
-        $this->package = array_shift($argv);
-        if (! $this->package) {
-            $this->outln("Please enter a Vendor.Package name.");
-            exit(0);
-        }
-        
-        $this->outln("Package: '{$this->package}'.");
-        
-        $this->version = array_shift($argv);
-        if (! $this->version) {
-            $this->outln("No package version specified; validate only.");
-            return;
-        }
-        
-        if (! $this->validateVersion()) {
-            $this->outln("Package version invalid.");
-            $this->outln("Please use the format '0.1.5(-dev|-alpha0|-beta1|-RC5).");
-            exit(0);
-        }
-        
-        $this->outln("Package version: '{$this->version}'.");
-        
-        $release = array_shift($argv);
-        if ($release == 'release') {
-            $this->release = true;
-            $this->outln("Release requested; will package, tag, and release.");
-        } else {
-            $this->release = false;
-            $this->outln("Release not requested; package only.");
-        }
-    }
-    
-    protected function validateVersion()
-    {
-        $format = '^(\d+.\d+.\d+)(-(dev|alpha\d+|beta\d+|RC\d+))?$';
-        preg_match("/$format/", $this->version, $matches);
-        return (bool) $matches;
-    }
-    
-    protected function setRepo()
-    {
-        $this->repo = __DIR__ . "/package/{$this->package}";
-    }
-    
-    protected function setDocs()
-    {
-        $this->docs = __DIR__ . "/docs/{$this->package}";
-    }
-    
-    protected function gitCloneOrPull()
-    {
-        if (is_dir($this->repo)) {
-            $this->outln("Pulling 'develop' branch from Github ... ");
-            $cmd = "cd {$this->repo}; git pull";
-        } else {
-            $repo_base = dirname($this->repo);
-            $this->outln("Cloning 'develop' branch from Github ... ");
-            $cmd = "cd {$repo_base}; "
-                 . "git clone git@github.com:auraphp/{$this->package}.git; "
-                 . "cd {$this->package}; "
-                 . "git checkout gh-pages; "
-                 . "git checkout develop; ";
-        }
-        
-        $this->shell($cmd, $output, $return);
-        $this->outln("OK.");
-    }
-    
-    protected function gitDevelop()
-    {
-        $this->outln("Checking branch ... ");
-        $cmd = "cd {$this->repo}; git status";
-        $last = $this->shell($cmd, $output, $return);
-        if (strpos($output[0], "branch develop") === false) {
-            $this->outln("not OK.");
-            $this->outln("Repo is not on branch develop.");
-            exit(1);
-        }
-        $this->outln("OK.");
+        $this->shell("git checkout develop");
     }
     
     protected function runTests()
     {
-        $this->outln("Running tests ... ");
-        $cmd = "cd {$this->repo}/tests; phpunit";
+        $this->outln("Run tests. ");
+        $cmd = "cd tests; phpunit";
         $line = $this->shell($cmd, $output, $return);
         if ($return == 1 || $return == 2) {
-            $this->outln("not OK.");
             $this->outln($line);
             exit(1);
         }
-        
-        $this->outln("OK.");
     }
     
-    protected function writeDocs()
+    protected function validateDocs()
     {
-        $this->outln("Writing inline API docs ... ");
+        $this->outln("Validate API docs.");
         
-        $this->shell("rm -rf {$this->docs}");
-        $cmd = "phpdoc -d {$this->repo}/src -t {$this->docs} --force --validate --ignore=*/views/,*/layouts/";
+        // remove previous validation records
+        $target = "/tmp/phpdoc/{$this->package}";
+        $this->shell("rm -rf {$target}");
+        
+        // validate
+        $cmd = "phpdoc -d ./src/ -t {$target} --force --verbose --template=checkstyle";
         $line = $this->shell($cmd, $output, $return);
         
-        // docblox does not use a return code or a last line, so we need to
-        // count output lines. errors means there will be more than 6 lines.
-        if (count($output) > 6) {
-            $this->outln("not OK.");
-            $this->outln("Run '$cmd -v' for more information.");
-            exit(1);
+        // remove logs
+        $this->shell("rm -f ./phpdoc-*.log");
+        
+        // validity checks don't seem to work with phpdoc. check output.
+        // lines with 2 space indents look like errors.
+        foreach ($output as $line) {
+            if (substr($line, 0, 2) == '  ') {
+                $this->outln('API docs not valid.');
+                exit(1);
+            }
         }
         
-        $this->outln("OK.");
+        // guess they're valid
+        $this->outln("API docs look valid.");
     }
     
-    protected function checkMeta()
+    protected function touchSupportFiles()
     {
-        $meta = "{$this->repo}/meta";
+        $file = "./README.md";
+        if (! $this->isReadableFile($file)) {
+            touch($file);
+        }
+        
+        $meta = "./meta";
         if (! is_dir($meta)) {
             mkdir($meta, 0755, true);
         }
@@ -282,45 +244,37 @@ class Package extends AbstractCommand
         );
         
         foreach ($files as $file) {
-            if (! is_readable($file)) {
+            if (! $this->isReadableFile($file)) {
                 touch($file);
             }
         }
     }
     
-    protected function checkReadme()
-    {
-        $file = "{$this->repo}/README.md";
-        if (! is_readable($file)) {
-            touch($file);
-        }
-    }
-    
     protected function checkChanges()
     {
-        $this->outln("Checking the change log ...");
+        $this->outln("Checking the change log.");
         
         // read the log for the src dir
-        $this->shell("cd {$this->repo}; git log -1 src", $output, $return);
+        $this->outln("Last log on src:");
+        $this->shell("git log -1 src", $output, $return);
         $src_timestamp = $this->gitDateToTimestamp($output);
         
-        $this->outln('');
-        
         // now read the log for meta/changes.txt
-        $this->shell("cd {$this->repo}; git log -1 meta/changes.txt", $output, $return);
+        $this->outln("Last log on changes:");
+        $this->shell("git log -1 meta/changes.txt", $output, $return);
         $changes_timestamp = $this->gitDateToTimestamp($output);
         
         // which is older?
         if ($src_timestamp > $changes_timestamp) {
             $this->outln('');
-            $this->outln('NOTICE: Have you updated meta/changes.txt? Check the log:');
-            $this->outln('');
-            $this->outln("    cd {$this->repo}; git log --name-only");
-            $this->outln('');
-            sleep(3);
-        } else {
-            $this->outln('OK.');
+            $this->outln('File meta/changes.txt is older than last src file.');
+            $this->outln("Check the log using 'git log --name-only'");
+            $this->outln("and note changes back to " . date('D M j H:i:s Y', $src_timestamp));
+            $this->outln("Then commit the meta/changes.txt file.");
+            exit(1);
         }
+        
+        $this->outln('Change log looks up to date.');
     }
     
     protected function gitDateToTimestamp($output)
@@ -337,19 +291,18 @@ class Package extends AbstractCommand
     
     protected function fetchMeta()
     {
-        $this->outln("Reading meta files ... ");
+        $this->outln("Reading meta files.");
         $this->fetchAuthors();
         $this->fetchSummary();
         $this->fetchDescription();
         $this->fetchChanges();
         $this->fetchKeywords();
         $this->fetchRequire();
-        $this->outln("OK.");
     }
     
     protected function fetchAuthors()
     {
-        $file = "{$this->repo}/meta/authors.csv";
+        $file = "./meta/authors.csv";
         
         $base = array(
             "type"      => null,
@@ -389,7 +342,7 @@ class Package extends AbstractCommand
     
     protected function fetchSummary()
     {
-        $file = "{$this->repo}/meta/summary.txt";
+        $file = "./meta/summary.txt";
         $this->summary = trim(file_get_contents($file));
         if (! $this->summary) {
             $this->outln("not OK.");
@@ -400,7 +353,7 @@ class Package extends AbstractCommand
     
     protected function fetchDescription()
     {
-        $file = "{$this->repo}/meta/description.txt";
+        $file = "./meta/description.txt";
         $this->description = trim(file_get_contents($file));
         if (! $this->description) {
             $this->outln("not OK.");
@@ -411,7 +364,7 @@ class Package extends AbstractCommand
     
     protected function fetchChanges()
     {
-        $file = "{$this->repo}/meta/changes.txt";
+        $file = "./meta/changes.txt";
         $this->changes = file_get_contents($file);
         if (! $this->changes) {
             $this->outln("not OK.");
@@ -422,7 +375,7 @@ class Package extends AbstractCommand
     
     protected function fetchKeywords()
     {
-        $file = "{$this->repo}/meta/keywords.csv";
+        $file = "./meta/keywords.csv";
         $data = trim(file_get_contents($file));
         if (! $data) {
             $this->outln("not OK.");
@@ -437,7 +390,7 @@ class Package extends AbstractCommand
     
     protected function fetchRequire()
     {
-        $file = "{$this->repo}/meta/require.csv";
+        $file = "./meta/require.csv";
         $require = array();
         
         $fh = fopen($file, "rb");
@@ -457,7 +410,7 @@ class Package extends AbstractCommand
     
     protected function fetchReadme()
     {
-        $file = "{$this->repo}/README.md";
+        $file = "./README.md";
         $this->readme = trim(file_get_contents($file));
         if (! $this->readme) {
             $this->outln("not OK.");
@@ -494,11 +447,11 @@ class Package extends AbstractCommand
         
         // convert to json and save
         $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        $file = "{$this->repo}/composer.json";
+        $file = "./composer.json";
         file_put_contents($file, $json);
         
         // validate it
-        $cmd = "cd {$this->repo}; composer validate";
+        $cmd = "composer validate";
         $result = $this->shell($cmd);
         if (trim($result) != './composer.json is valid') {
             $this->outln('Not OK.');
@@ -507,8 +460,7 @@ class Package extends AbstractCommand
         }
         
         // commit it
-        $cmd = "cd {$this->repo}; "
-             . "git add composer.json; "
+        $cmd = "git add composer.json; "
              . "git commit composer.json --message='updated composer'";
         
         $this->shell($cmd);
@@ -520,26 +472,24 @@ class Package extends AbstractCommand
     
     protected function gitStatus()
     {
-        $this->outln("Checking status ... ");
-        $this->shell("cd {$this->repo}; git status", $output, $return);
+        $this->outln("Checking repo status.");
+        $this->shell("git status", $output, $return);
         $output = implode(PHP_EOL, $output) . PHP_EOL;
-        $ok = "# On branch develop" . PHP_EOL
+        $ok = "# On branch {$this->branch}" . PHP_EOL
             . "nothing to commit (working directory clean)" . PHP_EOL;
         
         if ($return || $output != $ok) {
-            $this->outln("not OK.");
-            $this->out($output);
+            $this->outln("Not ready.");
             exit(1);
         }
         
-        // done
-        $this->outln("OK.");
+        $this->outln("Status OK.");
     }
     
     protected function gitBranchVersion()
     {
         $this->outln("Branching for {$this->version} ... ");
-        $cmd = "cd {$this->repo}; git branch {$this->version}; git checkout {$this->version}";
+        $cmd = "git branch {$this->version}; git checkout {$this->version}";
         $last = $this->shell($cmd, $output, $return);
         if ($return) {
             $this->outln("not OK.");
@@ -551,14 +501,14 @@ class Package extends AbstractCommand
     
     protected function gitBranchPages()
     {
-        $this->shell("cd {$this->repo}; git checkout gh-pages");
+        $this->shell("git checkout gh-pages");
     }
     
     protected function moveVersionDocs()
     {
         $this->outln("Moving version API docs ... ");
         $source = "{$this->docs}/*";
-        $target = "{$this->repo}/version/{$this->version}/api/";
+        $target = "./version/{$this->version}/api/";
         $this->shell("mkdir -p $target");
         $this->shell("mv $source $target");
         $this->outln(" OK.");
@@ -567,7 +517,7 @@ class Package extends AbstractCommand
     protected function writeVersionIndex()
     {
         $this->outln("Writing version index ... ");
-        $file = "{$this->repo}/version/{$this->version}/index.md";
+        $file = "./version/{$this->version}/index.md";
         $text = [
             "---",
             "title: Aura for PHP -- {$this->summary}",
@@ -590,7 +540,7 @@ class Package extends AbstractCommand
     protected function gitAddVersionDocsAndIndex()
     {
         $this->outln("Adding version API docs and index ... ");
-        $this->shell("cd {$this->repo}; git add index.md; git add version/{$this->version}");
+        $this->shell("git add index.md; git add version/{$this->version}");
         $this->outln("OK.");
     }
     
@@ -619,7 +569,7 @@ class Package extends AbstractCommand
         ];
         
         // look for versions
-        $items = glob("{$this->repo}/version/*", GLOB_ONLYDIR);
+        $items = glob("./version/*", GLOB_ONLYDIR);
         $list = [];
         
         // make a list of versions
@@ -637,7 +587,7 @@ class Package extends AbstractCommand
         $text[] = "";
         
         // write to file
-        $file = "{$this->repo}/index.md";
+        $file = "./index.md";
         file_put_contents($file, implode(PHP_EOL, $text));
         
         // done
