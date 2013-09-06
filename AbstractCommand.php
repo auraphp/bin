@@ -20,12 +20,13 @@ abstract class AbstractCommand
     
     protected function shell($cmd, &$output = null, &$return = null)
     {
-        $cmd = str_replace('; ', ';\\' . PHP_EOL . '    ', $cmd);
-        $this->outln('    ' . $cmd);
+        $cmd = str_replace('; ', ';\\' . PHP_EOL, $cmd);
+        $this->outln($cmd);
         $output = null;
         $result = exec($cmd, $output, $return);
-        $output = '    ' . implode(PHP_EOL . '    ', $output);
-        $this->outln($output);
+        foreach ($output as $line) {
+            $this->outln($line);
+        }
         return $result;
     }
     
@@ -33,7 +34,7 @@ abstract class AbstractCommand
     {
         $github_auth = $this->config->github_user
                      . ':'
-                     . $this->config->github_pass;
+                     . $this->config->github_token;
                      
         $api = "https://{$github_auth}@api.github.com";
         $url = $api . $path;
