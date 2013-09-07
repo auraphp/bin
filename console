@@ -11,13 +11,14 @@ error_reporting(E_ALL);
 
 // name => class
 $commands = [
-    'issues'        => 'Issues',
-    'packagist'     => 'Packagist',
-    'release'       => 'Release',
-    'release-pages' => 'ReleasePages',
-    'repos'         => 'Repos',
-    'system-status' => 'SystemStatus',
-    'travis'        => 'Travis',
+    'issues'            => 'Issues',
+    'log-since-release' => 'LogSinceRelease',
+    'packagist'         => 'Packagist',
+    'release'           => 'Release',
+    'release-pages'     => 'ReleasePages',
+    'repos'             => 'Repos',
+    'system-status'     => 'SystemStatus',
+    'travis'            => 'Travis',
 ];
 
 // config file
