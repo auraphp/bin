@@ -37,6 +37,11 @@ class ReleasePages extends AbstractCommand
             exit(1);
         }
         
+        if (! is_dir($this->site_dir)) {
+            $this->outln('Base site directory does not exist.');
+            exit(1);
+        }
+        
         // the package name
         $this->package = basename(getcwd());
         
@@ -121,7 +126,7 @@ class ReleasePages extends AbstractCommand
     {
         $this->outln("Writing version API docs.");
         $api_dir = "{$this->version_dir}/api";
-        $cmd = "phpdoc -d ./src -t $api_dir --force --validate --template=old-ocean";
+        $cmd = "phpdoc -d ./src -t $api_dir --force --validate";
         $this->shell($cmd, $output, $return);
         
         $this->outln('Remove API cache files.');
