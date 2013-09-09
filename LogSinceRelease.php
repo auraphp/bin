@@ -3,6 +3,7 @@ class LogSinceRelease extends AbstractCommand
 {
     public function __invoke(array $argv)
     {
+        $orig = null;
         $dir = array_shift($argv);
         if ($dir) {
             $orig = getcwd();
