@@ -39,7 +39,10 @@ array_shift($argv);
 // was a command specified?
 $name = array_shift($argv);
 if (! $name) {
-    echo "Command not specified." . PHP_EOL;
+    echo "Command not specified. Commands are:" . PHP_EOL;
+    foreach ($commands as $name => $class) {
+        echo '    '. $name . PHP_EOL;
+    }
     exit(1);
 }
 
