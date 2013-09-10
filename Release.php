@@ -111,16 +111,6 @@ class Release extends AbstractCommand
         $this->commit = array_shift($argv);
     }
     
-    protected function gitCurrentBranch()
-    {
-        $branch = exec('git rev-parse --abbrev-ref HEAD', $output, $return);
-        if ($return) {
-            $this->outln(implode(PHP_EOL, $output));
-            exit($return);
-        }
-        return trim($branch);
-    }
-    
     protected function gitCheckout()
     {
         if ($this->branch == $this->gitCurrentBranch()) {

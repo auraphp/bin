@@ -31,14 +31,15 @@ class ReleasePages extends AbstractCommand
     protected function prep($argv)
     {
         // where's the site directory?
-        $this->site_dir = array_shift($argv);
+        $this->site_dir = $this->config->site_dir;
         if (! $this->site_dir) {
-            $this->outln('Please pass the base site directory.');
+            $this->outln('Please set the site_dir in your .aurarc file.');
             exit(1);
         }
         
         if (! is_dir($this->site_dir)) {
-            $this->outln('Base site directory does not exist.');
+            $this->outln('Base site directory does not exist:');
+            $this->outln($this->site_dir);
             exit(1);
         }
         
@@ -162,13 +163,8 @@ class ReleasePages extends AbstractCommand
             "",
         ];
         
-        // look for versions THAT ARE ALREADY IN THE DOCS DIR
-        $items = glob("{$this->package_dir}/*", GLOB_ONLYDIR);
-        $list = [];
-        
-        // make a list of versions
-        foreach ($items as $item) {
-            $version = basename($item);
+        $versions = $this->readSortedVersions();
+        foreach ($versions as $version) {
             $list[] = "- `{$version}` : "
                     . "[.zip](https://github.com/auraphp/{$this->package}/zipball/{$version}), "
                     . "[.tar.gz](https://github.com/auraphp/{$this->package}/tarball/{$version}), "
@@ -176,7 +172,6 @@ class ReleasePages extends AbstractCommand
                     . "[api]({$version}/api/)" . PHP_EOL;
         }
         
-        $list = array_reverse($list);
         $text = array_merge($text, $list);
         
         // write to file
@@ -186,6 +181,17 @@ class ReleasePages extends AbstractCommand
             $this->outln('Failed.');
             exit(1);
         }
+    }
+    
+    protected function readSortedVersions()
+    {
+        $dirs = glob("{$this->package_dir}/*", GLOB_ONLYDIR);
+        $versions = [];
+        foreach ($dirs as $dir) {
+            $versions[] = basename($dir);
+        }
+        usort($versions, 'version_compare');
+        return array_reverse($versions);
     }
     
     protected function commit()

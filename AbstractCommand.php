@@ -74,4 +74,14 @@ abstract class AbstractCommand
     {
         return $this->api('GET', "/repos/auraphp/{$name}/issues");
     }
+
+    protected function gitCurrentBranch()
+    {
+        $branch = exec('git rev-parse --abbrev-ref HEAD', $output, $return);
+        if ($return) {
+            $this->outln(implode(PHP_EOL, $output));
+            exit($return);
+        }
+        return trim($branch);
+    }
 }
