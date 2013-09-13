@@ -17,7 +17,9 @@ $commands = [
     'release'           => 'Release',
     'release-pages'     => 'ReleasePages',
     'repos'             => 'Repos',
+    'system-release'    => 'SystemRelease',
     'system-status'     => 'SystemStatus',
+    'system-update'     => 'SystemUpdate',
     'travis'            => 'Travis',
 ];
 
