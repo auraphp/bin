@@ -5,7 +5,9 @@ class Repos extends AbstractCommand
     {
         $list = $this->apiGetRepos();
         foreach ($list as $repo) {
-            $this->outln($repo->name);
+            $tags = $this->apiGetTags($repo->name);
+            $last = end($tags);
+            $this->outln("$repo->name $last");
         }
     }
 }

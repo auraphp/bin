@@ -70,6 +70,17 @@ abstract class AbstractCommand
         return $repos;
     }
     
+    protected function apiGetTags($repo)
+    {
+        $data = $this->api('GET', "/repos/auraphp/$repo/tags");
+        $tags = [];
+        foreach ($data as $tag) {
+            $tags[] = $tag->name;
+        }
+        usort($tags, 'version_compare');
+        return $tags;
+    }
+    
     protected function apiGetIssues($name)
     {
         return $this->api('GET', "/repos/auraphp/{$name}/issues");
