@@ -105,6 +105,7 @@ class ReleasePages extends AbstractCommand
         }
         
         $text = trim(file_get_contents('README.md'));
+        $text = preg_replace('/^\[\!\[Build Status.*$/', '', $text);
         $text = preg_replace("/```php/", "{% highlight php %}", $text);
         $text = preg_replace("/```/", "{% endhighlight %}", $text);
         $text = "---" . PHP_EOL
