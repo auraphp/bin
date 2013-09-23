@@ -33,15 +33,30 @@ class SystemRelease extends AbstractCommand
         ],
         'minimum-stability' => 'dev',
         'require' => [
-            'aura/installer-system'  => '1.0.0',
-            'aura/framework'         => '1.0.0-beta7',
-            'aura/demo'              => '1.0.0-beta2',
+            'aura/installer-system' => '1.0.2',
+            'aura/autoload' => '1.0.2',
+            'aura/cli' => '1.1.1',
+            'aura/di' => '1.1.1',
+            'aura/filter' => '1.0.0',
+            'aura/http' => '1.0.2',
+            'aura/input' => '1.1.0',
+            'aura/intl' => '1.0.0',
+            'aura/marshal' => '1.1.1',
+            'aura/router' => '1.1.1',
+            'aura/session' => '1.0.1',
+            'aura/signal' => '1.0.2',
+            'aura/sql' => '1.3.0',
+            'aura/uri' => '1.1.1',
+            'aura/view' => '1.2.1',
+            'aura/web' => '1.0.2'
+            'aura/framework' => '1.0.0',
+            'aura/framework-demo' => '1.0.0',
         ],
     ];
 
-    public function exec()
+    public function __invoke($argv)
     {
-        $this->setArgs();
+        $this->setArgs($argv);
         $this->setRepo();
         $this->removeOldStuff();
         $this->gitClone();
@@ -58,28 +73,21 @@ class SystemRelease extends AbstractCommand
         exit(0);
     }
 
-    protected function setArgs()
+    protected function setArgs(array $argv)
     {
-        if (! isset($_SERVER["argv"][1])) {
+        $this->version = array_shift($argv);
+        if (! $this->version) {
             $this->outln("Please specify a system version.");
             exit(1);
         }
 
-        $this->version = $_SERVER["argv"][1];
-        if (! $this->validateVersion()) {
+        if (! $this->isValidVersion($this->version)) {
             $this->outln("System version invalid.");
             $this->outln("Please use the format '1.2.3-rc4'.");
             exit(1);
         }
 
         $this->outln("System version: '{$this->version}'.");
-    }
-
-    protected function validateVersion()
-    {
-        $format = '^(\d+.\d+.\d+)(-(dev|alpha\d+|beta\d+|RC\d+))?$';
-        preg_match("/$format/", $this->version, $matches);
-        return (bool) $matches;
     }
 
     protected function setRepo()
