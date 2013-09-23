@@ -93,10 +93,10 @@ class Packagist extends AbstractCommand
         }
     ],
     "require": {
-        "php": ">=5.4.0",
+        "php": ">=5.4.0"
     },
     "autoload": {
-        "files" => ["autoload.php"]
+        "files": ["autoload.php"]
     }
 }
 
