@@ -95,4 +95,11 @@ abstract class AbstractCommand
         }
         return trim($branch);
     }
+    
+    protected function isValidVersion($version)
+    {
+        $format = '^(\d+.\d+.\d+)(-(dev|alpha\d+|beta\d+|RC\d+))?$';
+        preg_match("/$format/", $version, $matches);
+        return (bool) $matches;
+    }
 }

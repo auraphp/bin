@@ -96,11 +96,7 @@ class Release extends AbstractCommand
             return;
         }
         
-        $format = '^(\d+.\d+.\d+)(-(dev|alpha\d+|beta\d+|RC\d+))?$';
-        preg_match("/$format/", $this->version, $matches);
-        $valid_version = (bool) $matches;
-        
-        if (! $valid_version) {
+        if (! $this->isValidVersion($this->version)) {
             $this->outln("Version '{$this->version}' invalid.");
             $this->outln("Please use the format '0.1.5(-dev|-alpha0|-beta1|-RC5)'.");
             exit(1);
