@@ -44,7 +44,7 @@ class Release extends AbstractCommand
         $this->gitCheckout();
         $this->gitPull();
         $this->runTests();
-        $this->validateDocs();
+        $this->validateDocs($this->package);
         $this->touchSupportFiles();
         $this->checkChanges();
         $this->gitStatus();

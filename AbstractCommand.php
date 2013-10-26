@@ -102,4 +102,32 @@ abstract class AbstractCommand
         preg_match("/$format/", $version, $matches);
         return (bool) $matches;
     }
+    
+    protected function validateDocs($package)
+    {
+        $this->outln('Validate API docs.');
+        
+        // remove previous validation records
+        $target = "/tmp/phpdoc/{$package}";
+        $this->shell("rm -rf {$target}");
+        
+        // validate
+        $cmd = "phpdoc -d src/ -t {$target} --force --verbose --template=checkstyle";
+        $line = $this->shell($cmd, $output, $return);
+        
+        // remove logs
+        $this->shell('rm -f phpdoc-*.log');
+        
+        // validity checks don't seem to work with phpdoc. check output.
+        // lines with 2 space indents look like errors.
+        foreach ($output as $line) {
+            if (substr($line, 0, 2) == '  ') {
+                $this->outln('API docs not valid.');
+                exit(1);
+            }
+        }
+        
+        // guess they're valid
+        $this->outln('API docs look valid.');
+    }
 }
