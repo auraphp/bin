@@ -112,16 +112,47 @@ abstract class AbstractCommand
         $this->shell("rm -rf {$target}");
         
         // validate
-        $cmd = "phpdoc -d src/ -t {$target} --force --verbose --template=checkstyle";
+        $cmd = "phpdoc -d src/ -t {$target} --force --verbose --template=xml";
         $line = $this->shell($cmd, $output, $return);
         
         // remove logs
         $this->shell('rm -f phpdoc-*.log');
         
-        // validity checks don't seem to work with phpdoc. check output.
-        // lines with 2 space indents look like errors.
-        foreach ($output as $line) {
-            if (substr($line, 0, 2) == '  ') {
+        // get the XML file and look for errors
+        $xml = simplexml_load_file("{$target}/structure.xml");
+        
+        // are there missing @package tags?
+        $missing = false;
+        foreach ($xml->file as $file) {
+            // get the expected package name
+            $class  = $file->class->full_name;
+            $parts  = explode('\\', ltrim($class, '\\'));
+            $expect = array_shift($parts) . '.' . array_shift($parts);
+            
+            // file-level tag
+            $actual = $file['package'];
+            if ($actual != $expect) {
+                $path    = $file['path'];
+                $missing = true;
+                $this->outln("  Expected @package {$expect}, actual @package {$actual}, for file {$path}");
+            }
+            
+            // class-level tag
+            $actual = $file->class['package'];
+            if ($actual != $expect) {
+                $missing = true;
+                $this->outln("  Expected @package {$expect}, actual @package {$actual}, for class {$class}");
+            }
+        }
+        
+        if ($missing) {
+            $this->outln('API docs not valid.');
+            exit(1);
+        }
+        
+        // are there other invalidities?
+        foreach ($xml->file as $file) {
+            if (isset($file->parse_markers->error)) {
                 $this->outln('API docs not valid.');
                 exit(1);
             }
