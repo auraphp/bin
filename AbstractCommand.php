@@ -124,24 +124,30 @@ abstract class AbstractCommand
         // are there missing @package tags?
         $missing = false;
         foreach ($xml->file as $file) {
+            
             // get the expected package name
-            $class  = $file->class->full_name;
+            $class  = $file->class->full_name . $file->interface->full_name;
             $parts  = explode('\\', ltrim($class, '\\'));
             $expect = array_shift($parts) . '.' . array_shift($parts);
+            $path = $file['path'];
             
+            // skip traits
+            if (substr($path, -9) == 'Trait.php') {
+                continue;
+            }
+
             // file-level tag
             $actual = $file['package'];
             if ($actual != $expect) {
-                $path    = $file['path'];
                 $missing = true;
-                $this->outln("  Expected @package {$expect}, actual @package {$actual}, for file {$path}");
+                $this->outln("  Expected @package {$expect}, actual @package {$actual}, for {$path}");
             }
             
             // class-level tag
-            $actual = $file->class['package'];
+            $actual = $file->class['package'] . $file->interface['package'];
             if ($actual != $expect) {
                 $missing = true;
-                $this->outln("  Expected @package {$expect}, actual @package {$actual}, for class {$class}");
+                $this->outln("  Expected @package {$expect}, actual @package {$actual}, for {$class}");
             }
         }
         
