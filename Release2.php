@@ -3,11 +3,9 @@
  * 
  * Works always and only on the current branch.
  * 
- * - `aura release2` to pre-flight
+ * - `aura release2` to dry-run
  * 
- * - `aura release2 $version` to dry-run and check composer
- * 
- * - `aura release2 $version commit` to release $version on GitHub
+ * - `aura release2 $version` to release $version via GitHub
  * 
  */
 class Release2 extends AbstractCommand
@@ -39,24 +37,10 @@ class Release2 extends AbstractCommand
         $this->checkSupportFiles();
         $this->runTests();
         $this->validateDocs($this->package);
-        $this->checkChanges();
-        $this->gitStatus();
-        
-        if (! $this->version) {
-            $this->outln('No version specified; done.');
-            exit(0);
-        }
-        
-        $this->outln("Prepare composer.json file for {$this->version}.");
+        $this->checkChangeLog();
         $this->updateComposer();
-        
-        if (! $this->commit == 'commit') {
-            $this->outln('Not committing to the release.');
-            exit(0);
-        }
-        
-        $this->outln('Commit to release: merge, tag, and push.');
-        $this->commit();
+        $this->gitStatus();
+        $this->release();
         $this->outln('Done!');
     }
     
@@ -69,20 +53,11 @@ class Release2 extends AbstractCommand
         $this->outln("Branch: {$this->branch}");
         
         $this->version = array_shift($argv);
-        if (! $this->version) {
-            $this->outln('Pre-flight.');
-            return;
-        }
-        
-        if (! $this->isValidVersion($this->version)) {
+        if ($this->version && ! $this->isValidVersion($this->version)) {
             $this->outln("Version '{$this->version}' invalid.");
             $this->outln("Please use the format '0.1.5(-dev|-alpha0|-beta1|-RC5)'.");
             exit(1);
         }
-        
-        $this->outln("Version: {$this->version}");
-        
-        $this->commit = array_shift($argv);
     }
     
     protected function gitPull()
@@ -96,7 +71,7 @@ class Release2 extends AbstractCommand
     
     protected function runTests()
     {
-        $this->outln('Run tests.');
+        $this->outln('Install requirements and run tests.');
         $this->shell('rm -rf composer.lock vendor');
         $this->shell('composer install');
         $cmd = 'cd tests; phpunit';
@@ -105,6 +80,7 @@ class Release2 extends AbstractCommand
             $this->outln($line);
             exit(1);
         }
+        $this->outln('Remove requirements.');
         $this->shell('rm -rf composer.lock vendor');
     }
     
@@ -125,13 +101,13 @@ class Release2 extends AbstractCommand
         }
     }
     
-    protected function checkChanges()
+    protected function checkChangeLog()
     {
         $this->outln('Checking the change log.');
         
         // read the log for the src dir
-        $this->outln('Last log on src, tests, config:');
-        $this->shell('git log -1 src tests config', $output, $return);
+        $this->outln('Last log on src/ :');
+        $this->shell('git log -1 src', $output, $return);
         $src_timestamp = $this->gitDateToTimestamp($output);
         
         // now read the log for meta/changes.txt
@@ -142,7 +118,7 @@ class Release2 extends AbstractCommand
         // which is older?
         if ($src_timestamp > $changes_timestamp) {
             $this->outln('');
-            $this->outln('File CHANGES.md is older than last commit.');
+            $this->outln('File CHANGES.md is older than src/ .');
             $this->outln("Check the log using 'git log --name-only'");
             $this->outln('and note changes back to ' . date('D M j H:i:s Y', $src_timestamp));
             $this->outln('Then commit the CHANGES.md file.');
@@ -185,14 +161,14 @@ class Release2 extends AbstractCommand
         // find the *aura* type
         $pos = strrpos($composer->name, '-');
         $aura_type = substr($composer->name, $pos + 1);
-        if (! in_array($aura_type , array('bundle', 'package', 'kernel'))) {
+        if (! in_array($aura_type, array('bundle', 'package', 'kernel'))) {
             $aura_type = 'library';
         }
         
         // force the composer type
-        $composer->type = $aura_type;
-        if ($composer->type == 'kernel' || $composer->type == 'bundle') {
-            $composer->type = 'library';
+        $composer->type = 'library';
+        if ($aura_type == 'project') {
+            $composer->type = 'project';
         }
         
         // force the license
@@ -228,10 +204,6 @@ class Release2 extends AbstractCommand
             exit(1);
         }
         
-        // // commit it
-        // $cmd = "git commit composer.json --message='updated composer'";
-        // $this->shell($cmd);
-        
         // done!
         $this->outln('OK.');
     }
@@ -252,8 +224,25 @@ class Release2 extends AbstractCommand
         $this->outln('Status OK.');
     }
     
-    protected function commit()
+    protected function release()
     {
-       $this->outln("Use Github Releases API to do this.");
+        if (! $this->version) {
+            $this->outln('Not making a release.');
+            return;
+        }
+        
+        $this->outln("Releasing version {$this->version} via GitHub.");
+        $response = $this->api(
+            'POST',
+            "/repos/auraphp/{$this->package}/releases",
+            json_encode(array(
+                'tag_name' => $this->version,
+                'target_commitish' => $this->branch,
+                'name' => $this->version,
+                'body' => file_get_contents('CHANGES.md'),
+                'draft' => false,
+                'prerelease' => false,
+            ))
+        );
     }
 }
