@@ -16,6 +16,7 @@ $commands = [
     'log-since-release' => 'LogSinceRelease',
     'packagist'         => 'Packagist',
     'release'           => 'Release',
+    'release2'          => 'Release2',
     'release-pages'     => 'ReleasePages',
     'repos'             => 'Repos',
     'system-release'    => 'SystemRelease',
