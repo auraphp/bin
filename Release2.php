@@ -174,8 +174,9 @@ class Release2 extends AbstractCommand
         // force the license
         $composer->license = 'BSD-2-Clause';
         
-        // force the homepage
-        $composer->homepage = "http://auraphp.com/{$this->package}";
+        // force the homepage; point to releases for now as some v2 packages
+        // use 'master' and others use 'develop-2'
+        $composer->homepage = "https://github.com/auraphp/{$this->package}/releases";
         
         // force the authors
         $composer->authors = array(
