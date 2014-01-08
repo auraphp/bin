@@ -157,8 +157,9 @@ abstract class AbstractCommand
         }
         
         // are there other invalidities?
-        foreach ($xml->file as $file) {
-            if (isset($file->parse_markers->error)) {
+        foreach ($output as $line) {
+            // invalid lines have 2-space indents
+            if (substr($line, 0, 2) == '  ') {
                 $this->outln('API docs not valid.');
                 exit(1);
             }
