@@ -141,12 +141,12 @@ class Release extends AbstractCommand
         }
     }
     
-    protected function validateDocs()
+    protected function validateDocs($package)
     {
         $this->outln('Validate API docs.');
         
         // remove previous validation records
-        $target = "/tmp/phpdoc/{$this->package}";
+        $target = "/tmp/phpdoc/{$package}";
         $this->shell("rm -rf {$target}");
         
         // validate
@@ -433,7 +433,7 @@ class Release extends AbstractCommand
         $this->shell('git status', $output, $return);
         $output = implode(PHP_EOL, $output) . PHP_EOL;
         $ok = "# On branch {$this->branch}" . PHP_EOL
-            . 'nothing to commit (working directory clean)' . PHP_EOL;
+            . 'nothing to commit, working directory clean' . PHP_EOL;
         
         if ($return || $output != $ok) {
             $this->outln('Not ready.');
