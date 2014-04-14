@@ -96,7 +96,17 @@ class Packagist extends AbstractCommand
         "php": ">=5.4.0"
     },
     "autoload": {
-        "files": ["autoload.php"]
+        "psr-4": {
+            "{$namespace}": "src/"
+        }
+    },
+    "extra": {
+        "aura": {
+            "type": "library"
+        },
+        "branch-alias": {
+            "dev-develop-2": "2.0.x-dev"
+        }
     }
 }
 
