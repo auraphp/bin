@@ -36,7 +36,9 @@ class Release2 extends AbstractCommand
         $this->gitPull();
         $this->checkSupportFiles();
         $this->runTests();
-        $this->validateDocs($this->package);
+        if (substr($this->package, -8) !== '_Project') {
+            $this->validateDocs($this->package);
+        }
         $this->checkChangeLog();
         $this->updateComposer();
         $this->gitStatus();
@@ -71,19 +73,53 @@ class Release2 extends AbstractCommand
     
     protected function runTests()
     {
-        $this->outln('Install requirements and run tests.');
-        $this->shell('rm -rf composer.lock vendor');
-        $this->shell('composer install');
+        if (substr($this->package, -7) == '_Kernel') {
+            return $this->runKernelTests();
+        }
+
+        if (substr($this->package, -8) == '_Project') {
+            return $this->runProjectTests();
+        }
+
+        return $this->runLibraryTests();
+
+    }
+    
+    protected function runLibraryTests()
+    {
+        $this->outln("Running library tests.");
         $cmd = 'cd tests; phpunit';
         $line = $this->shell($cmd, $output, $return);
         if ($return == 1 || $return == 2) {
             $this->outln($line);
             exit(1);
         }
-        $this->outln('Remove requirements.');
-        $this->shell('rm -rf composer.lock vendor');
     }
-    
+
+    protected function runKernelTests()
+    {
+        $this->outln("Running kernel tests.");
+        $cmd = 'cd tests/kernel; ./phpunit.sh';
+        $line = $this->shell($cmd, $output, $return);
+        if ($return == 1 || $return == 2) {
+            $this->outln($line);
+            exit(1);
+        }
+    }
+
+    protected function runProjectTests()
+    {
+        $this->outln("Running project tests.");
+        $this->shell('composer install');
+        $cmd = 'cd tests/project; ./phpunit.sh';
+        $line = $this->shell($cmd, $output, $return);
+        if ($return == 1 || $return == 2) {
+            $this->outln($line);
+            exit(1);
+        }
+        $this->shell('rm -rf composer.lock vendor tmp/log/*.log');
+    }
+
     protected function checkSupportFiles()
     {
         $files = array(
@@ -161,22 +197,24 @@ class Release2 extends AbstractCommand
         // find the *aura* type
         $pos = strrpos($composer->name, '-');
         $aura_type = substr($composer->name, $pos + 1);
-        if (! in_array($aura_type, array('bundle', 'package', 'kernel'))) {
+        if (! in_array($aura_type, array('bundle', 'project', 'kernel'))) {
             $aura_type = 'library';
+        }
+        
+        // leave project composer files alone
+        if ($aura_type == 'project') {
+            $this->validateComposer($composer);
+            return;
         }
         
         // force the composer type
         $composer->type = 'library';
-        if ($aura_type == 'project') {
-            $composer->type = 'project';
-        }
-        
+
         // force the license
         $composer->license = 'BSD-2-Clause';
         
-        // force the homepage; point to releases for now as some v2 packages
-        // use 'master' and others use 'develop-2'
-        $composer->homepage = "https://github.com/auraphp/{$this->package}/releases";
+        // force the homepage
+        $composer->homepage = "https://github.com/auraphp/{$this->package}";
         
         // force the authors
         $composer->authors = array(
@@ -186,17 +224,17 @@ class Release2 extends AbstractCommand
             )
         );
         
-        // force the autoload
-        $composer->autoload->files = array('autoload.php');
-        
         // force the *aura* type
         $composer->extra->aura->type = $aura_type;
         
-        // convert to json and save
+        // validate it and done
         $json = json_encode($composer, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
         file_put_contents('composer.json', $json . PHP_EOL);
-        
-        // validate it
+        $this->validateComposer();
+    }
+    
+    protected function validateComposer()
+    {
         $cmd = 'composer validate';
         $result = $this->shell($cmd, $output, $return);
         if ( $return) {
@@ -204,11 +242,9 @@ class Release2 extends AbstractCommand
             $this->outln('Composer file is not valid.');
             exit(1);
         }
-        
-        // done!
         $this->outln('OK.');
     }
-    
+
     protected function gitStatus()
     {
         $this->outln('Checking repo status.');
