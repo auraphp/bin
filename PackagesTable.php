@@ -39,12 +39,25 @@ class PackagesTable extends AbstractCommand
         $this->composer = $this->getComposer($repo);
         $this->readme = $this->getReadme($repo);
 
-        $package = "[{$repo->name}](https://github.com/auraphp/{$repo->name})";
-        $composer = "[{$this->composer->name}](https://packagist.org/packages/{$this->composer->name})";
+        $package = $this->getPackage($repo);
+        $composer = $this->getPackagist($repo);
         $release = $this->getRelease($repo);
         $description = $this->getDescription($repo);
         $quality = $this->getBadges($repo);
+        
         return "| $package | $composer | $release | $description<br />$quality |";
+    }
+
+    protected function getPackage($repo)
+    {
+        return "[{$repo->name}](https://github.com/auraphp/{$repo->name})";
+    }
+
+    protected function getPackagist($repo)
+    {
+        $name = str_replace('-', '&#8209;', $this->composer->name);
+        $path = $this->composer->name;
+        return "[{$name}](https://packagist.org/packages/{$path})";        
     }
 
     protected function getRelease($repo)
