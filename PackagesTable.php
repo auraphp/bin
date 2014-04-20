@@ -1,6 +1,9 @@
 <?php
 class PackagesTable extends AbstractCommand
 {
+    protected $composer;
+    protected $readme;
+
     public function __invoke()
     {
         $repos = $this->getRepos();
@@ -27,17 +30,21 @@ class PackagesTable extends AbstractCommand
 
     protected function getTableHead()
     {
-        return "| Package | Release | Description | " . PHP_EOL
-             . "| ------- | ------- | ----------- | ";
+        return "| Package | Composer | Release | Description | " . PHP_EOL
+             . "| ------- | -------- | ------- | ----------- | ";
     }
 
     protected function getTableLine($repo)
     {
-        $package = "[{$repo->name}](https://github.com/auraphp/{$repo->name})"; 
+        $this->composer = $this->getComposer($repo);
+        $this->readme = $this->getReadme($repo);
+
+        $package = "[{$repo->name}](https://github.com/auraphp/{$repo->name})";
+        $composer = "[{$this->composer->name}](https://packagist.org/packages/{$this->composer->name})";
         $release = $this->getRelease($repo);
         $description = $this->getDescription($repo);
         $quality = $this->getBadges($repo);
-        return "| $package | $release | $description<br />$quality |";
+        return "| $package | $composer | $release | $description<br />$quality |";
     }
 
     protected function getRelease($repo)
@@ -65,7 +72,7 @@ class PackagesTable extends AbstractCommand
 
     protected function getBadges($repo)
     {
-        $text = $this->getReadme($repo);
+        $text = $this->readme;
         $pos = strpos($text, '[!');
         $text = substr($text, $pos);
         $pos = strpos($text, PHP_EOL . PHP_EOL);
@@ -84,8 +91,7 @@ class PackagesTable extends AbstractCommand
 
     protected function getDescription($repo)
     {
-        $composer = $this->getComposer($repo);
-        return $composer->description;
+        return $this->composer->description;
     }
 
     protected function getComposer($repo)
