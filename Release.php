@@ -40,7 +40,6 @@ class Release extends AbstractCommand
     public function __invoke($argv)
     {
         $this->prep($argv);
-
         $this->gitCheckout();
         $this->gitPull();
         $this->runTests();
@@ -378,9 +377,9 @@ class Release extends AbstractCommand
 
     protected function writeComposer()
     {
-        $this->outln('Writing composer.json ... ');
+        $this->outln('Updating composer.json ... ');
 
-        $data = new \StdClass;
+        $data = json_decode(file_get_contents('composer.json'));
         $data->name         = str_replace('.', '/', strtolower($this->package));
         $data->version      = $this->version;
         $data->type         = 'aura-package';
@@ -400,7 +399,6 @@ class Release extends AbstractCommand
         $data->require = $this->require;
 
         $namespace = str_replace('.', '\\', $this->package);
-        $data->autoload['psr-0'] = [$namespace => 'src/'];
 
         // convert to json and save
         $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
