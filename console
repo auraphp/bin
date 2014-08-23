@@ -2,7 +2,7 @@
 <?php
 /**
  * A series of commands to work with Aura library repos.
- * 
+ *
  * @todo A "validate" command to validate a library repo; composer, travis,
  * directories, etc.
  */
@@ -29,7 +29,7 @@ $commands = [
 // config file
 $config_file = $_SERVER['HOME'] . '/.aurarc';
 if (! file_exists($config_file) || ! is_readable($config_file)) {
-    echo "Please create '$file' with your github username:password authorization." . PHP_EOL;
+    echo "Please create '$config_file' with your github username:password authorization." . PHP_EOL;
     die(1);
 }
 
