@@ -13,17 +13,17 @@ class Issues extends AbstractCommand
                 $list[] = $repo->name;
             }
         }
-        
+
         $issues = [];
         foreach ($list as $name) {
             $issues[$name] = $this->apiGetIssues($name);
         }
-        
+
         if (! $issues) {
             $this->outln("No issues found.");
             exit(0);
         }
-        
+
         foreach ($list as $name) {
             if (! $issues[$name]) {
                 continue;
