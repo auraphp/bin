@@ -61,7 +61,7 @@ abstract class AbstractCommand
 
     protected function apiGetRepos()
     {
-        $data = $this->api('GET', '/users/auraphp/repos');
+        $data = $this->api('GET', '/orgs/auraphp/repos');
         $repos = [];
         foreach ($data as $repo) {
             $repos[$repo->name] = $repo;
