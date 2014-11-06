@@ -37,21 +37,31 @@ abstract class AbstractCommand
                      . $this->config->github_token;
 
         $api = "https://{$github_auth}@api.github.com";
-        $url = $api . $path;
-        $context = stream_context_create([
-            'http' => [
-                'method' => $method,
-                'header' => implode("\r\n", [
-                    'User-Agent: php/5.4',
-                    'Accept: application/json',
-                    'Content-Type: application/json',
-                ]),
-                'content' => $body,
-            ],
-        ]);
-        $json = file_get_contents($url, FALSE, $context);
-        $data = json_decode($json);
-        return $data;
+        $page = 1;
+        $stack = array();
+
+        do {
+            $url = $api . $path . "?page={$page}";
+            $context = stream_context_create([
+                'http' => [
+                    'method' => $method,
+                    'header' => implode("\r\n", [
+                        'User-Agent: php/5.4',
+                        'Accept: application/json',
+                        'Content-Type: application/json',
+                    ]),
+                    'content' => $body,
+                ],
+            ]);
+            $data = file_get_contents($url, FALSE, $context);
+            $json = json_decode($data);
+            if ($json) {
+                $stack[] = $json;
+            }
+            $page ++;
+        } while ($json);
+
+        return $stack;
     }
 
     protected function isReadableFile($file)
@@ -61,10 +71,12 @@ abstract class AbstractCommand
 
     protected function apiGetRepos()
     {
-        $data = $this->api('GET', '/orgs/auraphp/repos');
+        $stack = $this->api('GET', '/orgs/auraphp/repos');
         $repos = [];
-        foreach ($data as $repo) {
-            $repos[$repo->name] = $repo;
+        foreach ($stack as $json) {
+            foreach ($json as $repo) {
+                $repos[$repo->name] = $repo;
+            }
         }
         ksort($repos);
         return $repos;
@@ -72,10 +84,12 @@ abstract class AbstractCommand
 
     protected function apiGetTags($repo)
     {
-        $data = $this->api('GET', "/repos/auraphp/$repo/tags");
+        $stack = $this->api('GET', "/repos/auraphp/$repo/tags");
         $tags = [];
-        foreach ($data as $tag) {
-            $tags[] = $tag->name;
+        foreach ($stack as $json) {
+            foreach ($json as $tag) {
+                $tags[] = $tag->name;
+            }
         }
         usort($tags, 'version_compare');
         return $tags;
@@ -83,7 +97,14 @@ abstract class AbstractCommand
 
     protected function apiGetIssues($name)
     {
-        return $this->api('GET', "/repos/auraphp/{$name}/issues");
+        $stack = $this->api('GET', "/repos/auraphp/{$name}/issues");
+        $issues = [];
+        foreach ($stack as $json) {
+            foreach ($json as $issue) {
+                $issues[] = $issue;
+            }
+        }
+        return $issues;
     }
 
     protected function gitCurrentBranch()
