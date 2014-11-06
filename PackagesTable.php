@@ -44,7 +44,7 @@ class PackagesTable extends AbstractCommand
         $release = $this->getRelease($repo);
         $description = $this->getDescription($repo);
         $quality = $this->getBadges($repo);
-        
+
         return "| $package | $composer | $release | $description<br />$quality |";
     }
 
@@ -57,7 +57,7 @@ class PackagesTable extends AbstractCommand
     {
         $name = str_replace('-', '&#8209;', $this->composer->name);
         $path = $this->composer->name;
-        return "[{$name}](https://packagist.org/packages/{$path})";        
+        return "[{$name}](https://packagist.org/packages/{$path})";
     }
 
     protected function getRelease($repo)
