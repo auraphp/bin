@@ -88,7 +88,7 @@ class Release2 extends AbstractCommand
     protected function runLibraryTests()
     {
         $this->outln("Running library unit tests.");
-        $cmd = 'cd tests/unit; ./phpunit.sh';
+        $cmd = 'phpunit -c tests/unit/';
         $line = $this->shell($cmd, $output, $return);
         if ($return == 1 || $return == 2) {
             $this->outln($line);
