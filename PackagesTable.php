@@ -74,9 +74,9 @@ class PackagesTable extends AbstractCommand
     protected function getVersions($repo)
     {
         $versions = array();
-        $releases = $this->api("GET", "/repos/auraphp/{$repo->name}/releases");
-        if ($releases) {
-            foreach ($releases as $release) {
+        $stack = $this->api("GET", "/repos/auraphp/{$repo->name}/releases");
+        foreach ($stack as $json) {
+            foreach ($json as $release) {
                 $versions[] = $release->tag_name;
             }
         }

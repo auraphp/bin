@@ -8,7 +8,7 @@ class Packagist extends AbstractCommand
         $this->validateFile();
         $this->checkHook();
     }
-    
+
     protected function checkFile()
     {
         $dir = getcwd();
@@ -17,7 +17,7 @@ class Packagist extends AbstractCommand
             $this->outln('Composer file exists.');
             return;
         }
-        
+
         $this->out('Creating composer file ... ');
         $json = $this->getJson();
         file_put_contents($file, $json);
@@ -27,7 +27,7 @@ class Packagist extends AbstractCommand
         $this->outln('Then re-run this command.');
         exit(1);
     }
-    
+
     protected function validateFile()
     {
         $this->shell('composer validate', $output, $return);
@@ -37,23 +37,26 @@ class Packagist extends AbstractCommand
         }
         $this->outln('Composer file is valid.');
     }
-    
+
     protected function checkHook()
     {
         // the repo name
         $repo = basename(getcwd());
         $this->out("Checking hook on {$repo} ... ");
-        
-        $data = $this->api('GET', "/repos/auraphp/{$repo}/hooks");
-        foreach ($data as $hook) {
-            if ($hook->name == 'packagist') {
-                $this->outln('already exists.');
-                return;
+
+        $stack = $this->api('GET', "/repos/auraphp/{$repo}/hooks");
+        foreach ($stack as $json) {
+            foreach ($json as $hook) {
+                if ($hook->name == 'packagist') {
+                    $this->outln('already exists.');
+                    return;
+                }
             }
         }
+
         $this->outln(' does not exist.');
         $this->out('Creating hook ... ');
-        
+
         $hook = new StdClass;
         $hook->name = 'packagist';
         $hook->active = true;
@@ -61,19 +64,19 @@ class Packagist extends AbstractCommand
             'user' => $this->config->packagist_user,
             'token' => $this->config->packagist_token,
         ];
-        
+
         $body = json_encode($hook);
         $response = $this->api('POST', "/repos/auraphp/{$repo}/hooks", $body);
-        
+
         if (! isset($response->id)) {
             $this->outln('failure.');
             $this->outln(var_export((array) $response, true));
             exit(1);
         }
-        
+
         $this->outln('success.');
     }
-    
+
     protected function getJson()
     {
         $repo = basename(getcwd());

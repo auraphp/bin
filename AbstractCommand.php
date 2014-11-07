@@ -55,10 +55,20 @@ abstract class AbstractCommand
             ]);
             $data = file_get_contents($url, FALSE, $context);
             $json = json_decode($data);
+
+            // for POST etc, do not try additional pages
+            if (strtolower($method) !== 'get') {
+                return $json;
+            }
+
+            // add results to the stack
             if ($json) {
                 $stack[] = $json;
             }
+
+            // next page!
             $page ++;
+
         } while ($json);
 
         return $stack;
