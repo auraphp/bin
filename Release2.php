@@ -40,6 +40,7 @@ class Release2 extends AbstractCommand
             $this->validateDocs($this->package);
         }
         $this->checkChangeLog();
+        $this->checkIssues();
         $this->updateComposer();
         $this->gitStatus();
         $this->release();
@@ -190,6 +191,21 @@ class Release2 extends AbstractCommand
         }
         $this->outln('No date found in log.');
         exit(1);
+    }
+
+    protected function checkIssues()
+    {
+        $issues = $this->apiGetIssues($this->package);
+        if (! $issues) {
+            $this->outln('No outstanding issues.');
+            return;
+        }
+
+        $this->outln('Outstanding issues:');
+        foreach ($issues as $issue) {
+            // $this->outln('    ' . $issue->number . '. ' . $issue->title);
+            $this->outln("    {$issue->html_url} ({$issue->title})");
+        }
     }
 
     protected function updateComposer()
