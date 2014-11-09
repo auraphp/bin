@@ -32,6 +32,12 @@ abstract class AbstractCommand
 
     protected function api($method, $path, $body = null)
     {
+        if (strpos($path, '?') === false) {
+            $path .= '?';
+        } else {
+            $path .= '&';
+        }
+
         $github_auth = $this->config->github_user
                      . ':'
                      . $this->config->github_token;
@@ -41,7 +47,8 @@ abstract class AbstractCommand
         $stack = array();
 
         do {
-            $url = $api . $path . "?page={$page}";
+
+            $url = $api . $path . "page={$page}";
             $context = stream_context_create([
                 'http' => [
                     'method' => $method,
@@ -107,7 +114,7 @@ abstract class AbstractCommand
 
     protected function apiGetIssues($name)
     {
-        $stack = $this->api('GET', "/repos/auraphp/{$name}/issues");
+        $stack = $this->api('GET', "/repos/auraphp/{$name}/issues?sort=created&direction=asc");
         $issues = [];
         foreach ($stack as $json) {
             foreach ($json as $issue) {
