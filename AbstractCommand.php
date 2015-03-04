@@ -174,18 +174,11 @@ abstract class AbstractCommand
                 continue;
             }
 
-            // file-level tag
-            $actual = $file['package'];
-            if ($actual != $expect) {
-                $missing = true;
-                $this->outln("  Expected @package {$expect}, actual @package {$actual}, for {$path}");
-            }
-
             // class-level tag
             $actual = $file->class['package'] . $file->interface['package'];
             if ($actual != $expect) {
                 $missing = true;
-                $this->outln("  Expected @package {$expect}, actual @package {$actual}, for {$class}");
+                $this->outln("  Expected @package {$expect}, actual @package {$actual}, for class {$class}");
             }
         }
 

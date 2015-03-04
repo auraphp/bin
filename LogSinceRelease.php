@@ -9,7 +9,7 @@ class LogSinceRelease extends AbstractCommand
             $orig = getcwd();
             chdir($dir);
         }
-        
+
         $version = $this->gitLastVersion();
         $last = exec("git show {$version} --pretty=format:'%H %ci'");
         list($hash, $date, $time, $zone) = explode(' ', $last);
@@ -17,17 +17,17 @@ class LogSinceRelease extends AbstractCommand
         $branch = $this->gitCurrentBranch();
         $message = "Last release was {$version} on {$date} at {$time} {$zone}";
         $after = "$date $time $zone";
-        
+
         $this->outln("$package $branch");
         $this->outln($message);
         $this->outln();
         passthru("git log --name-status --reverse --after='{$after}'");
-        
+
         if ($orig) {
             chdir($orig);
         }
     }
-    
+
     protected function gitLastVersion()
     {
         exec('git tag --list', $versions);

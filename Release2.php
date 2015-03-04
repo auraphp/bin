@@ -141,6 +141,7 @@ class Release2 extends AbstractCommand
         $files = array(
             '.travis.yml',
             'CHANGES.md',
+            'CONTRIBUTING.md',
             'README.md',
             'composer.json',
         );
@@ -280,12 +281,8 @@ class Release2 extends AbstractCommand
     protected function gitStatus()
     {
         $this->outln('Checking repo status.');
-        $this->shell('git status', $output, $return);
-        $output = implode(PHP_EOL, $output) . PHP_EOL;
-        $ok = "# On branch {$this->branch}" . PHP_EOL
-            . 'nothing to commit, working directory clean' . PHP_EOL;
-
-        if ($return || $output != $ok) {
+        $this->shell('git status --porcelain', $output, $return);
+        if ($return || $output) {
             $this->outln('Not ready.');
             exit(1);
         }
@@ -313,5 +310,7 @@ class Release2 extends AbstractCommand
                 'prerelease' => false,
             ))
         );
+
+        $this->shell('git pull');
     }
 }
