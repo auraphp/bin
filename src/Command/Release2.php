@@ -31,9 +31,9 @@ class Release2 extends AbstractCommand
         'extra' => array(),
     );
 
-    public function __invoke($argv)
+    public function __invoke()
     {
-        $this->prep($argv);
+        $this->prep();
 
         $this->gitPull();
         $this->checkSupportFiles();
@@ -49,8 +49,10 @@ class Release2 extends AbstractCommand
         $this->stdio->outln('Done!');
     }
 
-    protected function prep($argv)
+    protected function prep()
     {
+        $argv = $this->getArgv();
+
         $this->package = basename(getcwd());
         $this->stdio->outln("Package: {$this->package}");
 

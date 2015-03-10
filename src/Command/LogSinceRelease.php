@@ -3,8 +3,10 @@ namespace Aura\Bin\Command;
 
 class LogSinceRelease extends AbstractCommand
 {
-    public function __invoke(array $argv)
+    public function __invoke()
     {
+        $argv = $this->getArgv();
+
         $orig = null;
         $dir = array_shift($argv);
         if ($dir) {

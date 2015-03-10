@@ -19,9 +19,9 @@ class ReleasePages extends AbstractCommand
     protected $version_dir;
     protected $commit;
 
-    public function __invoke(array $argv)
+    public function __invoke()
     {
-        $this->prep($argv);
+        $this->prep();
         $this->readComposer();
         $this->makePackageDir();
         $this->makeVersionDir();
@@ -38,8 +38,10 @@ class ReleasePages extends AbstractCommand
         $this->stdio->outln('Pages committed.');
     }
 
-    protected function prep($argv)
+    protected function prep()
     {
+        $argv = $this->getArgv();
+
         // where's the site directory?
         $this->site_dir = $this->config->site_dir;
         if (! $this->site_dir) {

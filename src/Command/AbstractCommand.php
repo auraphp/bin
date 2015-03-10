@@ -21,6 +21,14 @@ abstract class AbstractCommand
         $this->stdio = $stdio;
     }
 
+    protected function getArgv()
+    {
+        $argv = $this->context->argv->get();
+        array_shift($argv); // cli/console.php
+        array_shift($argv); // command
+        return $argv;
+    }
+
     protected function shell($cmd, &$output = null, &$return = null)
     {
         $cmd = str_replace('; ', ';\\' . PHP_EOL, $cmd);

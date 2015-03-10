@@ -56,9 +56,9 @@ class SystemRelease extends AbstractCommand
         ],
     ];
 
-    public function __invoke($argv)
+    public function __invoke()
     {
-        $this->setArgs($argv);
+        $this->setArgs();
         $this->setRepo();
         $this->removeOldStuff();
         $this->gitClone();
@@ -75,8 +75,10 @@ class SystemRelease extends AbstractCommand
         exit(0);
     }
 
-    protected function setArgs(array $argv)
+    protected function setArgs()
     {
+        $argv = $this->getArgv();
+
         $this->version = array_shift($argv);
         if (! $this->version) {
             $this->stdio->outln("Please specify a system version.");

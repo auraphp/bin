@@ -3,9 +3,11 @@ namespace Aura\Bin\Command;
 
 class Issues extends AbstractCommand
 {
-    public function __invoke(array $argv)
+    public function __invoke()
     {
         $list = [];
+        $argv = $this->getArgv();
+
         $name = array_shift($argv);
         if ($name) {
             $list[] = $name;
