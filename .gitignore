@@ -1,0 +1,5 @@
+/composer.lock
+/tmp/*
+!/tmp/.placeholder
+/vendor
+/.env
