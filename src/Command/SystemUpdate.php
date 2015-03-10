@@ -1,5 +1,5 @@
 <?php
-namespace Aura\Bin;
+namespace Aura\Bin\Command;
 
 /**
  * Updates the git repos in the system/package directory.

@@ -1,5 +1,5 @@
 <?php
-namespace Aura\Bin;
+namespace Aura\Bin\Command;
 
 class PackagesTable extends AbstractCommand
 {

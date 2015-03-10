@@ -1,5 +1,5 @@
 <?php
-namespace Aura\Bin;
+namespace Aura\Bin\Command;
 
 /**
  * Outputs the status of "system-v1" skeleton and packages.

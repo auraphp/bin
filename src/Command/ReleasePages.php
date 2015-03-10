@@ -1,5 +1,5 @@
 <?php
-namespace Aura\Bin;
+namespace Aura\Bin\Command;
 
 /**
  * # do this for each new release:

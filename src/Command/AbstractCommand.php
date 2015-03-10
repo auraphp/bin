@@ -1,6 +1,7 @@
 <?php
-namespace Aura\Bin;
+namespace Aura\Bin\Command;
 
+use Aura\Bin\Config;
 use Aura\Cli\Stdio;
 use Aura\Cli\Context;
 

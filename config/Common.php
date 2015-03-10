@@ -43,21 +43,20 @@ class Common extends Config
 
     protected function modifyCliDispatcher(Container $di)
     {
-        $dispatcher = $di->get('aura/cli-kernel:dispatcher');
-        $dispatcher->addObjects(array(
-            'docs'              => $di->lazyNew('Aura\Bin\Docs'),
-            'issues'            => $di->lazyNew('Aura\Bin\Issues'),
-            'log-since-release' => $di->lazyNew('Aura\Bin\LogSinceRelease'),
-            'packagist'         => $di->lazyNew('Aura\Bin\Packagist'),
-            'packages-table'    => $di->lazyNew('Aura\Bin\PackagesTable'),
-            'release1'          => $di->lazyNew('Aura\Bin\Release'),
-            'release2'          => $di->lazyNew('Aura\Bin\Release2'),
-            'release1-pages'    => $di->lazyNew('Aura\Bin\ReleasePages'),
-            'repos'             => $di->lazyNew('Aura\Bin\Repos'),
-            'system-release'    => $di->lazyNew('Aura\Bin\SystemRelease'),
-            'system-status'     => $di->lazyNew('Aura\Bin\SystemStatus'),
-            'system-update'     => $di->lazyNew('Aura\Bin\SystemUpdate'),
-            'travis'            => $di->lazyNew('Aura\Bin\Travis'),
+        $di->get('aura/cli-kernel:dispatcher')->addObjects(array(
+            'docs'              => $di->lazyNew('Aura\Bin\Command\Docs'),
+            'issues'            => $di->lazyNew('Aura\Bin\Command\Issues'),
+            'log-since-release' => $di->lazyNew('Aura\Bin\Command\LogSinceRelease'),
+            'packagist'         => $di->lazyNew('Aura\Bin\Command\Packagist'),
+            'packages-table'    => $di->lazyNew('Aura\Bin\Command\PackagesTable'),
+            'release1'          => $di->lazyNew('Aura\Bin\Command\Release'),
+            'release2'          => $di->lazyNew('Aura\Bin\Command\Release2'),
+            'release1-pages'    => $di->lazyNew('Aura\Bin\Command\ReleasePages'),
+            'repos'             => $di->lazyNew('Aura\Bin\Command\Repos'),
+            'system-release'    => $di->lazyNew('Aura\Bin\Command\SystemRelease'),
+            'system-status'     => $di->lazyNew('Aura\Bin\Command\SystemStatus'),
+            'system-update'     => $di->lazyNew('Aura\Bin\Command\SystemUpdate'),
+            'travis'            => $di->lazyNew('Aura\Bin\Command\Travis'),
         ));
     }
 
