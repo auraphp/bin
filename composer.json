@@ -1,0 +1,36 @@
+{
+    "name": "aura/bin",
+    "description": "Command-line tools for managing the Aura project.",
+    "keywords": [
+        "aura"
+    ],
+    "license": "BSD-2-Clause",
+    "authors": [
+        {
+            "name": "Aura.Bin Contributors",
+            "homepage": "https://github.com/auraphp/bin/contributors"
+        }
+    ],
+    "require": {
+        "aura/cli-kernel": "~2.0",
+        "monolog/monolog": "~1.0",
+        "josegonzalez/dotenv": "~0.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Aura\\Bin\\": "src/",
+            "Aura\\Cli_Project\\_Config\\": "config/"
+        }
+    },
+    "extra": {
+        "aura": {
+            "type": "project",
+            "config": {
+                "common": "Aura\\Cli_Project\\_Config\\Common",
+                "dev": "Aura\\Cli_Project\\_Config\\Dev",
+                "test": "Aura\\Cli_Project\\_Config\\Test",
+                "prod": "Aura\\Cli_Project\\_Config\\Prod"
+            }
+        }
+    }
+}
