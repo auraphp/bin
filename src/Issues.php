@@ -1,4 +1,6 @@
 <?php
+namespace Aura\Bin;
+
 class Issues extends AbstractCommand
 {
     public function __invoke(array $argv)

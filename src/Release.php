@@ -1,4 +1,6 @@
 <?php
+namespace Aura\Bin;
+
 /**
  *
  * - `aura release` to preflight on the current branch

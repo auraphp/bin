@@ -1,4 +1,6 @@
 <?php
+namespace Aura\Bin;
+
 /**
  * Outputs the status of "system-v1" skeleton and packages.
  * Only invoke this from a system directory.
@@ -17,7 +19,7 @@ class SystemStatus extends AbstractCommand
         // the package directory
         $glob = getcwd() . '/package/Aura.*';
         $dirs = glob($glob, GLOB_ONLYDIR);
-        
+
         // for each of the repositories ...
         foreach ($dirs as $dir) {
             $this->outln('------------------------------');

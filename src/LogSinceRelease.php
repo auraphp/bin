@@ -1,4 +1,6 @@
 <?php
+namespace Aura\Bin;
+
 class LogSinceRelease extends AbstractCommand
 {
     public function __invoke(array $argv)

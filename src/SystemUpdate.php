@@ -1,4 +1,6 @@
 <?php
+namespace Aura\Bin;
+
 /**
  * Updates the git repos in the system/package directory.
  * Only invoke this from a system directory.
@@ -24,12 +26,12 @@ class SystemUpdate extends AbstractCommand
         // update the library packages
         $repos = $this->apiGetRepos();
         foreach ($repos as $repo) {
-    
+
             // only use 'Aura.Package' repositories as packages
             if (! preg_match('/Aura\.[A-Z0-9_]+/', $repo->name)) {
                 continue;
             }
-    
+
             // does the package exist locally ?
             $sub = $dir . DIRECTORY_SEPARATOR . $repo->name;
             if (is_dir($sub)) {

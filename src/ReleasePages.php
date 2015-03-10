@@ -1,4 +1,6 @@
 <?php
+namespace Aura\Bin;
+
 /**
  * # do this for each new release:
  * cd $PACKAGE

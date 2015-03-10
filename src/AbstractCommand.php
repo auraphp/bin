@@ -1,4 +1,6 @@
 <?php
+namespace Aura\Bin;
+
 abstract class AbstractCommand
 {
     protected $config;

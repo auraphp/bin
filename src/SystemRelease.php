@@ -1,4 +1,6 @@
 <?php
+namespace Aura\Bin;
+
 /**
  *
  * Usage:
@@ -116,24 +118,24 @@ class SystemRelease extends AbstractCommand
     protected function moveTarballToDownloads()
     {
         $this->outln("Adding tarball to system downloads.");
-        
+
         // clone the system
         $cmd = "git clone git@github.com:auraphp/system.git";
         $this->shell($cmd);
-        
+
         // check out pages
         $cmd = "cd system; git checkout gh-pages;";
         $this->shell($cmd);
-        
+
         // move tarball to downloads
         $cmd = "mv auraphp-system-{$this->version}.tgz system/downloads/";
         $this->shell($cmd);
-        
+
         // add to git and commit
         $cmd = "cd system; git add downloads; "
              . "git commit -a --message='added {$this->version} tarball'";
         $this->shell($cmd);
-        
+
         $this->outln("Done.");
     }
 

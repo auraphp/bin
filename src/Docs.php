@@ -1,4 +1,6 @@
 <?php
+namespace Aura\Bin;
+
 class Docs extends AbstractCommand
 {
     public function __invoke()

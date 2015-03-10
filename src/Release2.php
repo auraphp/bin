@@ -1,4 +1,6 @@
 <?php
+namespace Aura\Bin;
+
 /**
  *
  * Works always and only on the current branch.

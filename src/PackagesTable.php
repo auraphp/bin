@@ -1,4 +1,6 @@
 <?php
+namespace Aura\Bin;
+
 class PackagesTable extends AbstractCommand
 {
     protected $composer;
