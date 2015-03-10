@@ -20,9 +20,9 @@ class LogSinceRelease extends AbstractCommand
         $message = "Last release was {$version} on {$date} at {$time} {$zone}";
         $after = "$date $time $zone";
 
-        $this->outln("$package $branch");
-        $this->outln($message);
-        $this->outln();
+        $this->stdio->outln("$package $branch");
+        $this->stdio->outln($message);
+        $this->stdio->outln();
         passthru("git log --name-status --reverse --after='{$after}'");
 
         if ($orig) {

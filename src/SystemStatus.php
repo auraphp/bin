@@ -10,10 +10,10 @@ class SystemStatus extends AbstractCommand
     public function __invoke()
     {
         // system as a whole
-        $this->outln('------------------------------');
-        $this->outln();
-        $this->outln('system');
-        $this->outln();
+        $this->stdio->outln('------------------------------');
+        $this->stdio->outln();
+        $this->stdio->outln('system');
+        $this->stdio->outln();
         passthru('git status');
 
         // the package directory
@@ -22,17 +22,17 @@ class SystemStatus extends AbstractCommand
 
         // for each of the repositories ...
         foreach ($dirs as $dir) {
-            $this->outln('------------------------------');
-            $this->outln();
-            $this->outln();
-            $this->outln(basename($dir));
-            $this->outln();
+            $this->stdio->outln('------------------------------');
+            $this->stdio->outln();
+            $this->stdio->outln();
+            $this->stdio->outln(basename($dir));
+            $this->stdio->outln();
             passthru("cd $dir; git status");
         }
 
         // done!
-        $this->outln('------------------------------');
-        $this->outln();
-        $this->outln('Done!');
+        $this->stdio->outln('------------------------------');
+        $this->stdio->outln();
+        $this->stdio->outln('Done!');
     }
 }

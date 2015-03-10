@@ -1,33 +1,33 @@
 <?php
 namespace Aura\Bin;
 
+use Aura\Cli\Stdio;
+use Aura\Cli\Context;
+
 abstract class AbstractCommand
 {
     protected $config;
+    protected $context;
+    protected $stdio;
 
-    public function __construct(Config $config)
-    {
+    public function __construct(
+        Config $config,
+        Context $context,
+        Stdio $stdio
+    ) {
         $this->config = $config;
-    }
-
-    protected function out($str = null)
-    {
-        echo $str;
-    }
-
-    protected function outln($str = null)
-    {
-        $this->out($str . PHP_EOL);
+        $this->context = $context;
+        $this->stdio = $stdio;
     }
 
     protected function shell($cmd, &$output = null, &$return = null)
     {
         $cmd = str_replace('; ', ';\\' . PHP_EOL, $cmd);
-        $this->outln($cmd);
+        $this->stdio->outln($cmd);
         $output = null;
         $result = exec($cmd, $output, $return);
         foreach ($output as $line) {
-            $this->outln($line);
+            $this->stdio->outln($line);
         }
         return $result;
     }
@@ -130,7 +130,7 @@ abstract class AbstractCommand
     {
         $branch = exec('git rev-parse --abbrev-ref HEAD', $output, $return);
         if ($return) {
-            $this->outln(implode(PHP_EOL, $output));
+            $this->stdio->outln(implode(PHP_EOL, $output));
             exit($return);
         }
         return trim($branch);
@@ -145,7 +145,7 @@ abstract class AbstractCommand
 
     protected function validateDocs($package)
     {
-        $this->outln('Validate API docs.');
+        $this->stdio->outln('Validate API docs.');
 
         // remove previous validation records
         $target = "/tmp/phpdoc/{$package}";
@@ -180,12 +180,12 @@ abstract class AbstractCommand
             $actual = $file->class['package'] . $file->interface['package'];
             if ($actual != $expect) {
                 $missing = true;
-                $this->outln("  Expected @package {$expect}, actual @package {$actual}, for class {$class}");
+                $this->stdio->outln("  Expected @package {$expect}, actual @package {$actual}, for class {$class}");
             }
         }
 
         if ($missing) {
-            $this->outln('API docs not valid.');
+            $this->stdio->outln('API docs not valid.');
             exit(1);
         }
 
@@ -193,12 +193,12 @@ abstract class AbstractCommand
         foreach ($output as $line) {
             // invalid lines have 2-space indents
             if (substr($line, 0, 2) == '  ') {
-                $this->outln('API docs not valid.');
+                $this->stdio->outln('API docs not valid.');
                 exit(1);
             }
         }
 
         // guess they're valid
-        $this->outln('API docs look valid.');
+        $this->stdio->outln('API docs look valid.');
     }
 }

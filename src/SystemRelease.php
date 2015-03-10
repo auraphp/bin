@@ -71,7 +71,7 @@ class SystemRelease extends AbstractCommand
         $message = "Change to the 'system' directory, "
                  . "add a link in downloads/index.md, "
                  . "commit, and push.";
-        $this->outln($message);
+        $this->stdio->outln($message);
         exit(0);
     }
 
@@ -79,17 +79,17 @@ class SystemRelease extends AbstractCommand
     {
         $this->version = array_shift($argv);
         if (! $this->version) {
-            $this->outln("Please specify a system version.");
+            $this->stdio->outln("Please specify a system version.");
             exit(1);
         }
 
         if (! $this->isValidVersion($this->version)) {
-            $this->outln("System version invalid.");
-            $this->outln("Please use the format '1.2.3-rc4'.");
+            $this->stdio->outln("System version invalid.");
+            $this->stdio->outln("Please use the format '1.2.3-rc4'.");
             exit(1);
         }
 
-        $this->outln("System version: '{$this->version}'.");
+        $this->stdio->outln("System version: '{$this->version}'.");
     }
 
     protected function setRepo()
@@ -99,25 +99,25 @@ class SystemRelease extends AbstractCommand
 
     protected function removeOldStuff()
     {
-        $this->outln("Removing old systems and tarballs ... ");
+        $this->stdio->outln("Removing old systems and tarballs ... ");
         $glob = __DIR__ . "/auraphp-system-*";
         $this->shell("rm -rf $glob");
         $glob = __DIR__ . "/system";
         $this->shell("rm -rf $glob");
-        $this->outln("done.");
+        $this->stdio->outln("done.");
     }
 
     protected function gitClone()
     {
-        $this->outln("Cloning from Github ... ");
+        $this->stdio->outln("Cloning from Github ... ");
         $cmd = "git clone git@github.com:auraphp/system.git {$this->repo}";
         $this->shell($cmd);
-        $this->outln("OK.");
+        $this->stdio->outln("OK.");
     }
 
     protected function moveTarballToDownloads()
     {
-        $this->outln("Adding tarball to system downloads.");
+        $this->stdio->outln("Adding tarball to system downloads.");
 
         // clone the system
         $cmd = "git clone git@github.com:auraphp/system.git";
@@ -136,12 +136,12 @@ class SystemRelease extends AbstractCommand
              . "git commit -a --message='added {$this->version} tarball'";
         $this->shell($cmd);
 
-        $this->outln("Done.");
+        $this->stdio->outln("Done.");
     }
 
     protected function removeFiles()
     {
-        $this->outln("Removing dev files ... ");
+        $this->stdio->outln("Removing dev files ... ");
 
         $files = [
             "{$this->repo}/.git",
@@ -163,27 +163,27 @@ class SystemRelease extends AbstractCommand
 
     protected function writeComposerJson()
     {
-        $this->outln("Writing system composer.json ... ");
+        $this->stdio->outln("Writing system composer.json ... ");
         $file = $this->repo . '/composer.json';
         $json = json_encode($this->composer_json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
         file_put_contents($file, $json);
-        $this->outln('OK.');
+        $this->stdio->outln('OK.');
     }
 
     protected function installViaComposer()
     {
-        $this->outln("Installing packages via Composer ...");
+        $this->stdio->outln("Installing packages via Composer ...");
         $cmd = "cd {$this->repo}; composer --prefer-dist install";
         $this->shell($cmd);
-        $this->outln("Done.");
+        $this->stdio->outln("Done.");
     }
 
     protected function tarball()
     {
-        $this->outln("Tarballing the system ... ");
+        $this->stdio->outln("Tarballing the system ... ");
         $dir = dirname($this->repo);
         $name = basename($this->repo);
         $this->shell("cd {$dir}; tar -zcf {$name}.tgz {$name}");
-        $this->outln("OK.");
+        $this->stdio->outln("OK.");
     }
 }

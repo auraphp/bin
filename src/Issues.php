@@ -22,7 +22,7 @@ class Issues extends AbstractCommand
         }
 
         if (! $issues) {
-            $this->outln("No issues found.");
+            $this->stdio->outln("No issues found.");
             exit(0);
         }
 
@@ -30,11 +30,11 @@ class Issues extends AbstractCommand
             if (! $issues[$name]) {
                 continue;
             }
-            $this->outln($name . ':');
+            $this->stdio->outln($name . ':');
             foreach ($issues[$name] as $issue) {
-                $this->outln('    ' . $issue->number . '. ' . $issue->title);
-                $this->outln('    ' . $issue->html_url);
-                $this->outln();
+                $this->stdio->outln('    ' . $issue->number . '. ' . $issue->title);
+                $this->stdio->outln('    ' . $issue->html_url);
+                $this->stdio->outln();
             }
         }
     }

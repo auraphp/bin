@@ -11,7 +11,12 @@ class Common extends Config
         $di->set('aura/project-kernel:logger', $di->newInstance('Monolog\Logger'));
 
         $di->params['Aura\Bin\Config']['env'] = $_ENV;
-        $di->params['Aura\Bin\AbstractCommand']['config'] = $di->lazyNew('Aura\Bin\Config');
+
+        $di->params['Aura\Bin\AbstractCommand'] = array(
+            'config' => $di->lazyNew('Aura\Bin\Config'),
+            'context' => $di->lazyGet('aura/cli-kernel:context'),
+            'stdio' => $di->lazyGet('aura/cli-kernel:stdio'),
+        );
     }
 
     public function modify(Container $di)

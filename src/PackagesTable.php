@@ -9,9 +9,9 @@ class PackagesTable extends AbstractCommand
     public function __invoke()
     {
         $repos = $this->getRepos();
-        $this->outln($this->getTableHead());
+        $this->stdio->outln($this->getTableHead());
         foreach ($repos as $repo) {
-            $this->outln($this->getTableLine($repo));
+            $this->stdio->outln($this->getTableLine($repo));
         }
     }
 

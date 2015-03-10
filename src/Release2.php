@@ -46,28 +46,28 @@ class Release2 extends AbstractCommand
         $this->updateComposer();
         $this->gitStatus();
         $this->release();
-        $this->outln('Done!');
+        $this->stdio->outln('Done!');
     }
 
     protected function prep($argv)
     {
         $this->package = basename(getcwd());
-        $this->outln("Package: {$this->package}");
+        $this->stdio->outln("Package: {$this->package}");
 
         $this->branch = $this->gitCurrentBranch();
-        $this->outln("Branch: {$this->branch}");
+        $this->stdio->outln("Branch: {$this->branch}");
 
         $this->version = array_shift($argv);
         if ($this->version && ! $this->isValidVersion($this->version)) {
-            $this->outln("Version '{$this->version}' invalid.");
-            $this->outln("Please use the format '0.1.5(-dev|-alpha0|-beta1|-RC5)'.");
+            $this->stdio->outln("Version '{$this->version}' invalid.");
+            $this->stdio->outln("Please use the format '0.1.5(-dev|-alpha0|-beta1|-RC5)'.");
             exit(1);
         }
     }
 
     protected function gitPull()
     {
-        $this->outln("Pull {$this->branch}.");
+        $this->stdio->outln("Pull {$this->branch}.");
         $this->shell('git pull', $output, $return);
         if ($return) {
             exit($return);
@@ -90,25 +90,25 @@ class Release2 extends AbstractCommand
 
     protected function runLibraryTests()
     {
-        $this->outln("Running library unit tests.");
+        $this->stdio->outln("Running library unit tests.");
         $cmd = 'phpunit -c tests/unit/';
         $line = $this->shell($cmd, $output, $return);
         if ($return == 1 || $return == 2) {
-            $this->outln($line);
+            $this->stdio->outln($line);
             exit(1);
         }
 
         $dir = getcwd() . '/tests/container';
         if (! is_dir($dir)) {
-            $this->outln("No library container tests.");
+            $this->stdio->outln("No library container tests.");
             return;
         }
 
-        $this->outln("Running library container tests.");
+        $this->stdio->outln("Running library container tests.");
         $cmd = 'cd tests/container; ./phpunit.sh';
         $line = $this->shell($cmd, $output, $return);
         if ($return == 1 || $return == 2) {
-            $this->outln($line);
+            $this->stdio->outln($line);
             exit(1);
         }
         $this->shell('cd tests/container; rm -rf composer.* vendor');
@@ -116,23 +116,23 @@ class Release2 extends AbstractCommand
 
     protected function runKernelTests()
     {
-        $this->outln("Running kernel tests.");
+        $this->stdio->outln("Running kernel tests.");
         $cmd = 'cd tests/kernel; ./phpunit.sh';
         $line = $this->shell($cmd, $output, $return);
         if ($return == 1 || $return == 2) {
-            $this->outln($line);
+            $this->stdio->outln($line);
             exit(1);
         }
     }
 
     protected function runProjectTests()
     {
-        $this->outln("Running project tests.");
+        $this->stdio->outln("Running project tests.");
         $this->shell('composer install');
         $cmd = 'cd tests/project; ./phpunit.sh';
         $line = $this->shell($cmd, $output, $return);
         if ($return == 1 || $return == 2) {
-            $this->outln($line);
+            $this->stdio->outln($line);
             exit(1);
         }
         $this->shell('rm -rf composer.lock vendor tmp/log/*.log');
@@ -150,7 +150,7 @@ class Release2 extends AbstractCommand
 
         foreach ($files as $file) {
             if (! $this->isReadableFile($file)) {
-                $this->outln("Please create a '{$file}' file.");
+                $this->stdio->outln("Please create a '{$file}' file.");
                 exit(1);
             }
         }
@@ -158,30 +158,30 @@ class Release2 extends AbstractCommand
 
     protected function checkChangeLog()
     {
-        $this->outln('Checking the change log.');
+        $this->stdio->outln('Checking the change log.');
 
         // read the log for the src dir
-        $this->outln('Last log on src/ :');
+        $this->stdio->outln('Last log on src/ :');
         $this->shell('git log -1 src', $output, $return);
         $src_timestamp = $this->gitDateToTimestamp($output);
 
         // now read the log for meta/changes.txt
-        $this->outln('Last log on CHANGES.md:');
+        $this->stdio->outln('Last log on CHANGES.md:');
         $this->shell('git log -1 CHANGES.md', $output, $return);
         $changes_timestamp = $this->gitDateToTimestamp($output);
 
         // which is older?
         if ($src_timestamp > $changes_timestamp) {
             $since = date('D M j H:i:s Y', $changes_timestamp);
-            $this->outln('');
-            $this->outln('File CHANGES.md is older than src/ .');
-            $this->outln("Add changes from the log ...");
-            $this->outln("    git log --name-only --since='$since' --reverse");
-            $this->outln('... then commit the CHANGES.md file.');
+            $this->stdio->outln('');
+            $this->stdio->outln('File CHANGES.md is older than src/ .');
+            $this->stdio->outln("Add changes from the log ...");
+            $this->stdio->outln("    git log --name-only --since='$since' --reverse");
+            $this->stdio->outln('... then commit the CHANGES.md file.');
             exit(1);
         }
 
-        $this->outln('Change log looks up to date.');
+        $this->stdio->outln('Change log looks up to date.');
     }
 
     protected function gitDateToTimestamp($output)
@@ -192,7 +192,7 @@ class Release2 extends AbstractCommand
                 return strtotime($date);
             }
         }
-        $this->outln('No date found in log.');
+        $this->stdio->outln('No date found in log.');
         exit(1);
     }
 
@@ -200,20 +200,20 @@ class Release2 extends AbstractCommand
     {
         $issues = $this->apiGetIssues($this->package);
         if (! $issues) {
-            $this->outln('No outstanding issues.');
+            $this->stdio->outln('No outstanding issues.');
             return;
         }
 
-        $this->outln('Outstanding issues:');
+        $this->stdio->outln('Outstanding issues:');
         foreach ($issues as $issue) {
-            // $this->outln('    ' . $issue->number . '. ' . $issue->title);
-            $this->outln("    {$issue->html_url} ({$issue->title})");
+            // $this->stdio->outln('    ' . $issue->number . '. ' . $issue->title);
+            $this->stdio->outln("    {$issue->html_url} ({$issue->title})");
         }
     }
 
     protected function updateComposer()
     {
-        $this->outln('Updating composer.json ... ');
+        $this->stdio->outln('Updating composer.json ... ');
 
         // get composer data and normalize order of elements
         $composer = json_decode(file_get_contents('composer.json'));
@@ -273,33 +273,33 @@ class Release2 extends AbstractCommand
         $cmd = 'composer validate';
         $result = $this->shell($cmd, $output, $return);
         if ( $return) {
-            $this->outln('Not OK.');
-            $this->outln('Composer file is not valid.');
+            $this->stdio->outln('Not OK.');
+            $this->stdio->outln('Composer file is not valid.');
             exit(1);
         }
-        $this->outln('OK.');
+        $this->stdio->outln('OK.');
     }
 
     protected function gitStatus()
     {
-        $this->outln('Checking repo status.');
+        $this->stdio->outln('Checking repo status.');
         $this->shell('git status --porcelain', $output, $return);
         if ($return || $output) {
-            $this->outln('Not ready.');
+            $this->stdio->outln('Not ready.');
             exit(1);
         }
 
-        $this->outln('Status OK.');
+        $this->stdio->outln('Status OK.');
     }
 
     protected function release()
     {
         if (! $this->version) {
-            $this->outln('Not making a release.');
+            $this->stdio->outln('Not making a release.');
             return;
         }
 
-        $this->outln("Releasing version {$this->version} via GitHub.");
+        $this->stdio->outln("Releasing version {$this->version} via GitHub.");
         $response = $this->api(
             'POST',
             "/repos/auraphp/{$this->package}/releases",

@@ -54,56 +54,56 @@ class Release extends AbstractCommand
         // check packagist
 
         if (! $this->version) {
-            $this->outln('No version specified; done.');
+            $this->stdio->outln('No version specified; done.');
             exit(0);
         }
 
-        $this->outln("Prepare composer.json file for {$this->version}.");
+        $this->stdio->outln("Prepare composer.json file for {$this->version}.");
         $this->fetchMeta();
         $this->fetchReadme();
         $this->gitBranchVersion();
         $this->writeComposer();
 
         if (! $this->commit == 'commit') {
-            $this->outln('Not committing to the release.');
-            $this->outln('Currently on version branch.');
-            $this->outln('To kill off the branch, issue:');
-            $this->outln('    git reset --hard HEAD; \\');
-            $this->outln('    git checkout develop; \\');
-            $this->outln("    git branch -D {$this->version}; \\");
-            $this->outln('Done!');
+            $this->stdio->outln('Not committing to the release.');
+            $this->stdio->outln('Currently on version branch.');
+            $this->stdio->outln('To kill off the branch, issue:');
+            $this->stdio->outln('    git reset --hard HEAD; \\');
+            $this->stdio->outln('    git checkout develop; \\');
+            $this->stdio->outln("    git branch -D {$this->version}; \\");
+            $this->stdio->outln('Done!');
             exit(0);
         }
 
-        $this->outln('Commit to release: merge, tag, and push.');
+        $this->stdio->outln('Commit to release: merge, tag, and push.');
         $this->commit();
-        $this->outln('Done!');
+        $this->stdio->outln('Done!');
     }
 
     protected function prep($argv)
     {
         $this->package = basename(getcwd());
-        $this->outln("Package: {$this->package}");
+        $this->stdio->outln("Package: {$this->package}");
 
         $this->branch = array_shift($argv);
         if (! $this->branch) {
             $this->branch = $this->gitCurrentBranch();
         }
-        $this->outln("Branch: {$this->branch}");
+        $this->stdio->outln("Branch: {$this->branch}");
 
         $this->version = array_shift($argv);
         if (! $this->version) {
-            $this->outln('Pre-flight.');
+            $this->stdio->outln('Pre-flight.');
             return;
         }
 
         if (! $this->isValidVersion($this->version)) {
-            $this->outln("Version '{$this->version}' invalid.");
-            $this->outln("Please use the format '0.1.5(-dev|-alpha0|-beta1|-RC5)'.");
+            $this->stdio->outln("Version '{$this->version}' invalid.");
+            $this->stdio->outln("Please use the format '0.1.5(-dev|-alpha0|-beta1|-RC5)'.");
             exit(1);
         }
 
-        $this->outln("Version: {$this->version}");
+        $this->stdio->outln("Version: {$this->version}");
 
         $this->commit = array_shift($argv);
     }
@@ -111,11 +111,11 @@ class Release extends AbstractCommand
     protected function gitCheckout()
     {
         if ($this->branch == $this->gitCurrentBranch()) {
-            $this->outln("Already on branch {$this->branch}.");
+            $this->stdio->outln("Already on branch {$this->branch}.");
             return;
         }
 
-        $this->outln("Checkout {$this->branch}.");
+        $this->stdio->outln("Checkout {$this->branch}.");
         $this->shell("git checkout {$this->branch}", $output, $return);
         if ($return) {
             exit($return);
@@ -124,7 +124,7 @@ class Release extends AbstractCommand
 
     protected function gitPull()
     {
-        $this->outln("Pull {$this->branch}.");
+        $this->stdio->outln("Pull {$this->branch}.");
         $this->shell('git pull', $output, $return);
         if ($return) {
             exit($return);
@@ -133,18 +133,18 @@ class Release extends AbstractCommand
 
     protected function runTests()
     {
-        $this->outln('Run tests.');
+        $this->stdio->outln('Run tests.');
         $cmd = 'cd tests; phpunit';
         $line = $this->shell($cmd, $output, $return);
         if ($return == 1 || $return == 2) {
-            $this->outln($line);
+            $this->stdio->outln($line);
             exit(1);
         }
     }
 
     protected function validateDocs($package)
     {
-        $this->outln('Validate API docs.');
+        $this->stdio->outln('Validate API docs.');
 
         // remove previous validation records
         $target = "/tmp/phpdoc/{$package}";
@@ -161,13 +161,13 @@ class Release extends AbstractCommand
         // lines with 2 space indents look like errors.
         foreach ($output as $line) {
             if (substr($line, 0, 2) == '  ') {
-                $this->outln('API docs not valid.');
+                $this->stdio->outln('API docs not valid.');
                 exit(1);
             }
         }
 
         // guess they're valid
-        $this->outln('API docs look valid.');
+        $this->stdio->outln('API docs look valid.');
     }
 
     protected function touchSupportFiles()
@@ -198,41 +198,41 @@ class Release extends AbstractCommand
         }
 
         if (! $this->isReadableFile('composer.json')) {
-            $this->outln('Please create a composer.json file.');
+            $this->stdio->outln('Please create a composer.json file.');
             exit(1);
         }
 
         if (! $this->isReadableFile('.travis.yml')) {
-            $this->outln('Please create a .travis.yml file.');
+            $this->stdio->outln('Please create a .travis.yml file.');
             exit(1);
         }
     }
 
     protected function checkChanges()
     {
-        $this->outln('Checking the change log.');
+        $this->stdio->outln('Checking the change log.');
 
         // read the log for the src dir
-        $this->outln('Last log on src/:');
+        $this->stdio->outln('Last log on src/:');
         $this->shell('git log -1 src', $output, $return);
         $src_timestamp = $this->gitDateToTimestamp($output);
 
         // now read the log for meta/changes.txt
-        $this->outln('Last log on meta/changes.txt:');
+        $this->stdio->outln('Last log on meta/changes.txt:');
         $this->shell('git log -1 meta/changes.txt', $output, $return);
         $changes_timestamp = $this->gitDateToTimestamp($output);
 
         // which is older?
         if ($src_timestamp > $changes_timestamp) {
-            $this->outln('');
-            $this->outln('File meta/changes.txt is older than last src file.');
-            $this->outln("Check the log using 'git log --name-only'");
-            $this->outln('and note changes back to ' . date('D M j H:i:s Y', $src_timestamp));
-            $this->outln('Then commit the meta/changes.txt file.');
+            $this->stdio->outln('');
+            $this->stdio->outln('File meta/changes.txt is older than last src file.');
+            $this->stdio->outln("Check the log using 'git log --name-only'");
+            $this->stdio->outln('and note changes back to ' . date('D M j H:i:s Y', $src_timestamp));
+            $this->stdio->outln('Then commit the meta/changes.txt file.');
             exit(1);
         }
 
-        $this->outln('Change log looks up to date.');
+        $this->stdio->outln('Change log looks up to date.');
     }
 
     protected function gitDateToTimestamp($output)
@@ -243,13 +243,13 @@ class Release extends AbstractCommand
                 return strtotime($date);
             }
         }
-        $this->outln('No date found in log.');
+        $this->stdio->outln('No date found in log.');
         exit(1);
     }
 
     protected function fetchMeta()
     {
-        $this->outln('Reading meta files.');
+        $this->stdio->outln('Reading meta files.');
         $this->fetchAuthors();
         $this->fetchSummary();
         $this->fetchDescription();
@@ -285,8 +285,8 @@ class Release extends AbstractCommand
         fclose($fh);
 
         if (! $authors) {
-            $this->outln('not OK.');
-            $this->outln('Authors file is empty. Please add at least one author.');
+            $this->stdio->outln('not OK.');
+            $this->stdio->outln('Authors file is empty. Please add at least one author.');
             exit(1);
         }
 
@@ -303,8 +303,8 @@ class Release extends AbstractCommand
         $file = 'meta/summary.txt';
         $this->summary = trim(file_get_contents($file));
         if (! $this->summary) {
-            $this->outln('not OK.');
-            $this->outln('Summary file is empty. Please add a one-line summary.');
+            $this->stdio->outln('not OK.');
+            $this->stdio->outln('Summary file is empty. Please add a one-line summary.');
             exit(1);
         }
     }
@@ -314,8 +314,8 @@ class Release extends AbstractCommand
         $file = 'meta/description.txt';
         $this->description = trim(file_get_contents($file));
         if (! $this->description) {
-            $this->outln('not OK.');
-            $this->outln('Description file is empty. Please add a full description.');
+            $this->stdio->outln('not OK.');
+            $this->stdio->outln('Description file is empty. Please add a full description.');
             exit(1);
         }
     }
@@ -325,8 +325,8 @@ class Release extends AbstractCommand
         $file = 'meta/changes.txt';
         $this->changes = file_get_contents($file);
         if (! $this->changes) {
-            $this->outln('not OK.');
-            $this->outln('Changes file is empty. Please add change notes.');
+            $this->stdio->outln('not OK.');
+            $this->stdio->outln('Changes file is empty. Please add change notes.');
             exit(1);
         }
     }
@@ -336,8 +336,8 @@ class Release extends AbstractCommand
         $file = 'meta/keywords.csv';
         $data = trim(file_get_contents($file));
         if (! $data) {
-            $this->outln('not OK.');
-            $this->outln('Keywords file is empty. Please add at least one keyword.');
+            $this->stdio->outln('not OK.');
+            $this->stdio->outln('Keywords file is empty. Please add at least one keyword.');
             exit(1);
         }
         $words = explode(',', $data);
@@ -358,8 +358,8 @@ class Release extends AbstractCommand
         fclose($fh);
 
         if (! $require) {
-            $this->outln('not OK.');
-            $this->outln('Require file is empty. Please add at least one require line.');
+            $this->stdio->outln('not OK.');
+            $this->stdio->outln('Require file is empty. Please add at least one require line.');
             exit(1);
         }
 
@@ -371,15 +371,15 @@ class Release extends AbstractCommand
         $file = 'README.md';
         $this->readme = trim(file_get_contents($file));
         if (! $this->readme) {
-            $this->outln('not OK.');
-            $this->outln('Readme file is empty. Please add a README.md file.');
+            $this->stdio->outln('not OK.');
+            $this->stdio->outln('Readme file is empty. Please add a README.md file.');
             exit(1);
         }
     }
 
     protected function writeComposer()
     {
-        $this->outln('Updating composer.json ... ');
+        $this->stdio->outln('Updating composer.json ... ');
 
         $data = json_decode(file_get_contents('composer.json'));
         $data->name         = str_replace('.', '/', strtolower($this->package));
@@ -410,9 +410,9 @@ class Release extends AbstractCommand
         $cmd = 'composer validate';
         $result = $this->shell($cmd, $output, $return);
         if ( $return) {
-            $this->outln('Not OK.');
-            $this->outln('Composer file is not valid.');
-            $this->outln('Still on version branch.');
+            $this->stdio->outln('Not OK.');
+            $this->stdio->outln('Composer file is not valid.');
+            $this->stdio->outln('Still on version branch.');
             exit(1);
         }
 
@@ -424,35 +424,35 @@ class Release extends AbstractCommand
 
         // done!
         $this->composer_json = $json;
-        $this->outln('OK.');
+        $this->stdio->outln('OK.');
     }
 
     protected function gitStatus()
     {
-        $this->outln('Checking repo status.');
+        $this->stdio->outln('Checking repo status.');
         $this->shell('git status', $output, $return);
         $output = implode(PHP_EOL, $output) . PHP_EOL;
         $ok = "# On branch {$this->branch}" . PHP_EOL
             . 'nothing to commit, working directory clean' . PHP_EOL;
 
         if ($return || $output != $ok) {
-            $this->outln('Not ready.');
+            $this->stdio->outln('Not ready.');
             exit(1);
         }
 
-        $this->outln('Status OK.');
+        $this->stdio->outln('Status OK.');
     }
 
     protected function gitBranchVersion()
     {
-        $this->outln("Branching for {$this->version}.");
+        $this->stdio->outln("Branching for {$this->version}.");
         $cmd = "git checkout -b {$this->version}";
         $last = $this->shell($cmd, $output, $return);
         if ($return) {
-            $this->outln('Failure.');
+            $this->stdio->outln('Failure.');
             exit(1);
         }
-        $this->outln('Success.');
+        $this->stdio->outln('Success.');
     }
 
     protected function commit()
@@ -468,14 +468,14 @@ class Release extends AbstractCommand
         // now merge from the version branch
         $this->shell("git merge --no-ff {$this->version}", $output, $return);
         if ($return) {
-            $this->outln('Something went wrong.');
+            $this->stdio->outln('Something went wrong.');
             exit($return);
         }
 
         // delete the version branch
         $this->shell("git branch -d {$this->version}", $output, $return);
         if ($return) {
-            $this->outln('Something went wrong.');
+            $this->stdio->outln('Something went wrong.');
             exit($return);
         }
 

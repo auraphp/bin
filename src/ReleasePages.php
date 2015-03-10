@@ -30,12 +30,12 @@ class ReleasePages extends AbstractCommand
         $this->writePackageIndex();
 
         if ($this->commit != 'commit') {
-            $this->outln('Not committing the new pages.');
+            $this->stdio->outln('Not committing the new pages.');
             exit(0);
         }
 
         $this->commit();
-        $this->outln('Pages committed.');
+        $this->stdio->outln('Pages committed.');
     }
 
     protected function prep($argv)
@@ -43,13 +43,13 @@ class ReleasePages extends AbstractCommand
         // where's the site directory?
         $this->site_dir = $this->config->site_dir;
         if (! $this->site_dir) {
-            $this->outln('Please set the site_dir in your .aurarc file.');
+            $this->stdio->outln('Please set the site_dir in your .aurarc file.');
             exit(1);
         }
 
         if (! is_dir($this->site_dir)) {
-            $this->outln('Base site directory does not exist:');
-            $this->outln($this->site_dir);
+            $this->stdio->outln('Base site directory does not exist:');
+            $this->stdio->outln($this->site_dir);
             exit(1);
         }
 
@@ -63,7 +63,7 @@ class ReleasePages extends AbstractCommand
     protected function readComposer()
     {
         if (! $this->isReadableFile('composer.json')) {
-            $this->outln('No composer file available.');
+            $this->stdio->outln('No composer file available.');
             exit(1);
         }
         $this->composer = json_decode(file_get_contents('composer.json'));
@@ -73,14 +73,14 @@ class ReleasePages extends AbstractCommand
     {
         $this->package_dir = $this->site_dir . "/packages/{$this->package}";
         if (is_dir($this->package_dir)) {
-            $this->outln('Package dir exists.');
+            $this->stdio->outln('Package dir exists.');
             return;
         }
 
-        $this->outln('Make package dir.');
+        $this->stdio->outln('Make package dir.');
         $this->shell("mkdir -p $this->package_dir", $output, $return);
         if ($return) {
-            $this->outln('Failed.');
+            $this->stdio->outln('Failed.');
             exit(1);
         }
     }
@@ -88,29 +88,29 @@ class ReleasePages extends AbstractCommand
     protected function makeVersionDir()
     {
         $this->version = $this->composer->version;
-        $this->outln("Version: $this->version");
+        $this->stdio->outln("Version: $this->version");
 
         $this->version_dir = $this->package_dir . "/{$this->version}";
 
         // don't overwrite an existing version dir
         if (is_dir($this->version_dir)) {
-            $this->outln('Package version directory already exists.');
+            $this->stdio->outln('Package version directory already exists.');
             exit(1);
         }
 
-        $this->outln('Creating package version directory.');
+        $this->stdio->outln('Creating package version directory.');
         $this->shell("mkdir $this->version_dir", $output, $return);
         if ($return) {
-            $this->outln('Failed.');
+            $this->stdio->outln('Failed.');
             exit(1);
         }
     }
 
     protected function writeVersionIndex()
     {
-        $this->outln("Writing version index.");
+        $this->stdio->outln("Writing version index.");
         if (! $this->isReadableFile('README.md')) {
-            $this->outln('No README.md file.');
+            $this->stdio->outln('No README.md file.');
             exit(1);
         }
 
@@ -129,26 +129,26 @@ class ReleasePages extends AbstractCommand
         $file = $this->version_dir . '/index.md';
         $ok = file_put_contents($file, $text);
         if (! $ok) {
-            $this->outln('Failed.');
+            $this->stdio->outln('Failed.');
             exit(1);
         }
     }
 
     protected function writeVersionApi()
     {
-        $this->outln("Writing version API docs.");
+        $this->stdio->outln("Writing version API docs.");
         $api_dir = "{$this->version_dir}/api";
         $cmd = "phpdoc -d ./src -t $api_dir --force --validate";
         $this->shell($cmd, $output, $return);
 
-        $this->outln('Remove API cache files.');
+        $this->stdio->outln('Remove API cache files.');
         $this->shell("rm -rf $api_dir/structure.xml");
         $this->shell("rm -rf $api_dir/phpdoc-cache*");
     }
 
     protected function writePackageIndex()
     {
-        $this->outln("Writing package index.");
+        $this->stdio->outln("Writing package index.");
 
         $text = [
             "---",
@@ -189,7 +189,7 @@ class ReleasePages extends AbstractCommand
         $file = $this->package_dir . "/index.md";
         $ok = file_put_contents($file, implode(PHP_EOL, $text));
         if (! $ok) {
-            $this->outln('Failed.');
+            $this->stdio->outln('Failed.');
             exit(1);
         }
     }
@@ -207,7 +207,7 @@ class ReleasePages extends AbstractCommand
 
     protected function commit()
     {
-        $this->outln('Committing the new pages.');
+        $this->stdio->outln('Committing the new pages.');
         $orig = getcwd();
 
         chdir($this->site_dir);

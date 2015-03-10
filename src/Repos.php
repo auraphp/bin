@@ -9,7 +9,7 @@ class Repos extends AbstractCommand
         foreach ($list as $repo) {
             $tags = $this->apiGetTags($repo->name);
             $last = end($tags);
-            $this->outln("$repo->name $last");
+            $this->stdio->outln("$repo->name $last");
         }
     }
 }
