@@ -41,9 +41,16 @@ class Release extends AbstractCommand
 
     protected $phpdoc;
 
+    protected $phpunit;
+
     public function setPhpdoc($phpdoc)
     {
         $this->phpdoc = $phpdoc;
+    }
+
+    public function setPhpunit($phpunit)
+    {
+        $this->phpunit = $phpunit;
     }
 
     public function __invoke()
@@ -51,7 +58,7 @@ class Release extends AbstractCommand
         $this->prep();
         $this->gitCheckout();
         $this->gitPull();
-        $this->runTests();
+        $this->phpunit->v1();
         $this->phpdoc->validate($this->package);
         $this->touchSupportFiles();
         $this->checkChanges();
@@ -137,17 +144,6 @@ class Release extends AbstractCommand
         $this->shell('git pull', $output, $return);
         if ($return) {
             exit($return);
-        }
-    }
-
-    protected function runTests()
-    {
-        $this->stdio->outln('Run tests.');
-        $cmd = 'cd tests; phpunit';
-        $line = $this->shell($cmd, $output, $return);
-        if ($return == 1 || $return == 2) {
-            $this->stdio->outln($line);
-            exit(1);
         }
     }
 

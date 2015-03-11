@@ -67,10 +67,10 @@ class Phpdoc extends AbstractShell
         $this->stdio->outln("Writing version API docs.");
         $api_dir = "{$version_dir}/api";
         $cmd = "phpdoc -d ./src -t $api_dir --force --validate";
-        $this->shell($cmd, $output, $return);
+        $this($cmd, $output, $return);
 
         $this->stdio->outln('Remove API cache files.');
-        $this->shell("rm -rf $api_dir/structure.xml");
-        $this->shell("rm -rf $api_dir/phpdoc-cache*");
+        $this("rm -rf $api_dir/structure.xml");
+        $this("rm -rf $api_dir/phpdoc-cache*");
     }
 }

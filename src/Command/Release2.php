@@ -33,9 +33,16 @@ class Release2 extends AbstractCommand
 
     protected $phpdoc;
 
+    protected $phpunit;
+
     public function setPhpdoc($phpdoc)
     {
         $this->phpdoc = $phpdoc;
+    }
+
+    public function setPhpunit($phpunit)
+    {
+        $this->phpunit = $phpunit;
     }
 
     public function __invoke()
@@ -44,7 +51,7 @@ class Release2 extends AbstractCommand
 
         $this->gitPull();
         $this->checkSupportFiles();
-        $this->runTests();
+        $this->phpunit->v2($this->package);
         if (substr($this->package, -8) !== '_Project') {
             $this->phpdoc->validate($this->package);
         }
@@ -53,6 +60,8 @@ class Release2 extends AbstractCommand
         $this->updateComposer();
         $this->gitStatus();
         $this->release();
+        // $this->updatePackagesTable();
+        // $this->notifyMailingList();
         $this->stdio->outln('Done!');
     }
 
@@ -81,70 +90,6 @@ class Release2 extends AbstractCommand
         if ($return) {
             exit($return);
         }
-    }
-
-    protected function runTests()
-    {
-        if (substr($this->package, -7) == '_Kernel') {
-            return $this->runKernelTests();
-        }
-
-        if (substr($this->package, -8) == '_Project') {
-            return $this->runProjectTests();
-        }
-
-        return $this->runLibraryTests();
-
-    }
-
-    protected function runLibraryTests()
-    {
-        $this->stdio->outln("Running library unit tests.");
-        $cmd = 'phpunit -c tests/unit/';
-        $line = $this->shell($cmd, $output, $return);
-        if ($return == 1 || $return == 2) {
-            $this->stdio->outln($line);
-            exit(1);
-        }
-
-        $dir = getcwd() . '/tests/container';
-        if (! is_dir($dir)) {
-            $this->stdio->outln("No library container tests.");
-            return;
-        }
-
-        $this->stdio->outln("Running library container tests.");
-        $cmd = 'cd tests/container; ./phpunit.sh';
-        $line = $this->shell($cmd, $output, $return);
-        if ($return == 1 || $return == 2) {
-            $this->stdio->outln($line);
-            exit(1);
-        }
-        $this->shell('cd tests/container; rm -rf composer.* vendor');
-    }
-
-    protected function runKernelTests()
-    {
-        $this->stdio->outln("Running kernel tests.");
-        $cmd = 'cd tests/kernel; ./phpunit.sh';
-        $line = $this->shell($cmd, $output, $return);
-        if ($return == 1 || $return == 2) {
-            $this->stdio->outln($line);
-            exit(1);
-        }
-    }
-
-    protected function runProjectTests()
-    {
-        $this->stdio->outln("Running project tests.");
-        $this->shell('composer install');
-        $cmd = 'cd tests/project; ./phpunit.sh';
-        $line = $this->shell($cmd, $output, $return);
-        if ($return == 1 || $return == 2) {
-            $this->stdio->outln($line);
-            exit(1);
-        }
-        $this->shell('rm -rf composer.lock vendor tmp/log/*.log');
     }
 
     protected function checkSupportFiles()

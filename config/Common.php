@@ -25,6 +25,7 @@ class Common extends Config
         );
 
         $di->setter['Aura\Bin\Command\AbstractCommand']['setPhpdoc'] = $di->lazyNew('Aura\Bin\Shell\Phpdoc');
+        $di->setter['Aura\Bin\Command\AbstractCommand']['setPhpunit'] = $di->lazyNew('Aura\Bin\Shell\Phpunit');
     }
 
     public function modify(Container $di)

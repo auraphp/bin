@@ -58,7 +58,7 @@ class Phpunit extends AbstractShell
     {
         $this->stdio->outln("Running kernel tests.");
         $cmd = 'cd tests/kernel; ./phpunit.sh';
-        $line = $this->shell($cmd, $output, $return);
+        $line = $this($cmd, $output, $return);
         if ($return == 1 || $return == 2) {
             $this->stdio->errln($line);
             exit(1);
@@ -68,14 +68,14 @@ class Phpunit extends AbstractShell
     public function v2project()
     {
         $this->stdio->outln("Running project tests.");
-        $this->shell('composer install');
+        $this('composer install');
         $cmd = 'cd tests/project; ./phpunit.sh';
-        $line = $this->shell($cmd, $output, $return);
+        $line = $this($cmd, $output, $return);
         if ($return == 1 || $return == 2) {
             $this->stdio->outln($line);
             exit(1);
         }
-        $this->shell('rm -rf composer.lock vendor tmp/log/*.log');
+        $this('rm -rf composer.lock vendor tmp/log/*.log');
     }
 
 }
