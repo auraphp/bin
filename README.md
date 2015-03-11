@@ -8,24 +8,11 @@ First, create a Github application token at
 <https://github.com/settings/applications>. This will take the place of a
 password.
 
-Next, create a file in your $HOME called `.aurarc`. Add your usernames and
-tokens so you can interact with various APIs.
+Next, copy `_env` to `.env`. Add your usernames and tokens so you can interact
+with various APIs.
 
-Finally, symlink the `console` file to someplace useful in your $PATH; call it
-`aura`.
-
-For example:
-
-    $ touch ~/.aurarc
-    $ echo "
-    github_user = username
-    github_token = token
-    travis_user = ...
-    travis_token = ...
-    packagist_user = ...
-    packagist_token =...
-    " >> ~/.aurarc
-    $ ln -s /path/to/auraphp/bin/console /usr/local/bin/aura
+Finally, symlink the `cli/console.php` file to someplace useful in your $PATH;
+call it `aura`.
 
 You should now be able to issue commands; e.g., `aura repos`:
 
