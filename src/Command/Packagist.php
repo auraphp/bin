@@ -46,13 +46,11 @@ class Packagist extends AbstractCommand
         $repo = basename(getcwd());
         $this->stdio->out("Checking hook on {$repo} ... ");
 
-        $stack = $this->api('GET', "/repos/auraphp/{$repo}/hooks");
+        $hooks = $this->github->getHooks($repo);
         foreach ($stack as $json) {
-            foreach ($json as $hook) {
-                if ($hook->name == 'packagist') {
-                    $this->stdio->outln('already exists.');
-                    return;
-                }
+            if ($hook->name == 'packagist') {
+                $this->stdio->outln('already exists.');
+                return;
             }
         }
 
@@ -67,9 +65,7 @@ class Packagist extends AbstractCommand
             'token' => $this->config->packagist_token,
         ];
 
-        $body = json_encode($hook);
-        $response = $this->api('POST', "/repos/auraphp/{$repo}/hooks", $body);
-
+        $response = $this->github->postHook($repo, $hook);
         if (! isset($response->id)) {
             $this->stdio->outln('failure.');
             $this->stdio->outln(var_export((array) $response, true));

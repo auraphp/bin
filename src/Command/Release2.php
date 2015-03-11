@@ -200,7 +200,7 @@ class Release2 extends AbstractCommand
 
     protected function checkIssues()
     {
-        $issues = $this->apiGetIssues($this->package);
+        $issues = $this->github->getIssues($this->package);
         if (! $issues) {
             $this->stdio->outln('No outstanding issues.');
             return;
@@ -302,18 +302,21 @@ class Release2 extends AbstractCommand
         }
 
         $this->stdio->outln("Releasing version {$this->version} via GitHub.");
-        $response = $this->api(
-            'POST',
-            "/repos/auraphp/{$this->package}/releases",
-            json_encode(array(
-                'tag_name' => $this->version,
-                'target_commitish' => $this->branch,
-                'name' => $this->version,
-                'body' => file_get_contents('CHANGES.md'),
-                'draft' => false,
-                'prerelease' => false,
-            ))
+        $release = (object) array(
+            'tag_name' => $this->version,
+            'target_commitish' => $this->branch,
+            'name' => $this->version,
+            'body' => file_get_contents('CHANGES.md'),
+            'draft' => false,
+            'prerelease' => false,
         );
+
+        $response = $this->github->postRelease($this->package, $release);
+        if (! isset($response->id)) {
+            $this->stdio->outln('failure.');
+            $this->stdio->outln(var_export((array) $response, true));
+            exit(1);
+        }
 
         $this->shell('git pull');
     }

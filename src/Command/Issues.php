@@ -12,7 +12,7 @@ class Issues extends AbstractCommand
         if ($name) {
             $list[] = $name;
         } else {
-            $repos = $this->apiGetRepos();
+            $repos = $this->github->getRepos();
             foreach ($repos as $repo) {
                 $list[] = $repo->name;
             }
@@ -20,7 +20,7 @@ class Issues extends AbstractCommand
 
         $issues = [];
         foreach ($list as $name) {
-            $issues[$name] = $this->apiGetIssues($name);
+            $issues[$name] = $this->github->getIssues($name);
         }
 
         if (! $issues) {

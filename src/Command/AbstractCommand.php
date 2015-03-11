@@ -2,6 +2,7 @@
 namespace Aura\Bin\Command;
 
 use Aura\Bin\Config;
+use Aura\Bin\Github;
 use Aura\Cli\Stdio;
 use Aura\Cli\Context;
 
@@ -14,11 +15,13 @@ abstract class AbstractCommand
     public function __construct(
         Config $config,
         Context $context,
-        Stdio $stdio
+        Stdio $stdio,
+        Github $github
     ) {
         $this->config = $config;
         $this->context = $context;
         $this->stdio = $stdio;
+        $this->github = $github;
     }
 
     protected function getArgv()
@@ -41,99 +44,11 @@ abstract class AbstractCommand
         return $result;
     }
 
-    protected function api($method, $path, $body = null)
-    {
-        if (strpos($path, '?') === false) {
-            $path .= '?';
-        } else {
-            $path .= '&';
-        }
-
-        $github_auth = $this->config->github_user
-                     . ':'
-                     . $this->config->github_token;
-
-        $api = "https://{$github_auth}@api.github.com";
-        $page = 1;
-        $stack = array();
-
-        do {
-
-            $url = $api . $path . "page={$page}";
-            $context = stream_context_create([
-                'http' => [
-                    'method' => $method,
-                    'header' => implode("\r\n", [
-                        'User-Agent: php/5.4',
-                        'Accept: application/json',
-                        'Content-Type: application/json',
-                    ]),
-                    'content' => $body,
-                ],
-            ]);
-            $data = file_get_contents($url, FALSE, $context);
-            $json = json_decode($data);
-
-            // for POST etc, do not try additional pages
-            if (strtolower($method) !== 'get') {
-                return $json;
-            }
-
-            // add results to the stack
-            if ($json) {
-                $stack[] = $json;
-            }
-
-            // next page!
-            $page ++;
-
-        } while ($json);
-
-        return $stack;
-    }
-
     protected function isReadableFile($file)
     {
         return file_exists($file) && is_readable($file);
     }
 
-    protected function apiGetRepos()
-    {
-        $stack = $this->api('GET', '/orgs/auraphp/repos');
-        $repos = [];
-        foreach ($stack as $json) {
-            foreach ($json as $repo) {
-                $repos[$repo->name] = $repo;
-            }
-        }
-        ksort($repos);
-        return $repos;
-    }
-
-    protected function apiGetTags($repo)
-    {
-        $stack = $this->api('GET', "/repos/auraphp/$repo/tags");
-        $tags = [];
-        foreach ($stack as $json) {
-            foreach ($json as $tag) {
-                $tags[] = $tag->name;
-            }
-        }
-        usort($tags, 'version_compare');
-        return $tags;
-    }
-
-    protected function apiGetIssues($name)
-    {
-        $stack = $this->api('GET', "/repos/auraphp/{$name}/issues?sort=created&direction=asc");
-        $issues = [];
-        foreach ($stack as $json) {
-            foreach ($json as $issue) {
-                $issues[] = $issue;
-            }
-        }
-        return $issues;
-    }
 
     protected function gitCurrentBranch()
     {

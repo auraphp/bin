@@ -34,13 +34,11 @@ class Travis extends AbstractCommand
         $repo = basename(getcwd());
         $this->stdio->out("Checking hook on {$repo} ... ");
 
-        $stack = $this->api('GET', "/repos/auraphp/{$repo}/hooks");
-        foreach ($stack as $json) {
-            foreach ($json as $hook) {
-                if ($hook->name == 'travis') {
-                    $this->stdio->outln('already exists.');
-                    return;
-                }
+        $hooks = $this->github->getHooks($repo);
+        foreach ($hooks as $hook) {
+            if ($hook->name == 'travis') {
+                $this->stdio->outln('already exists.');
+                return;
             }
         }
 
@@ -55,9 +53,7 @@ class Travis extends AbstractCommand
             'token' => $this->config->travis_token,
         ];
 
-        $body = json_encode($hook);
-        $response = $this->api('POST', "/repos/auraphp/{$repo}/hooks", $body);
-
+        $response = $this->github->postHook($repo, $hook);
         if (! isset($response->id)) {
             $this->stdio->outln('failure.');
             $this->stdio->outln(var_export((array) $response, true));

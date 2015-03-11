@@ -17,7 +17,7 @@ class PackagesTable extends AbstractCommand
 
     protected function getRepos()
     {
-        $repos = $this->apiGetRepos();
+        $repos = $this->github->getRepos();
         foreach ($repos as $name => $repo) {
             $is_package = substr($name, 0, 5) == 'Aura.';
             $is_v2 = $repo->default_branch == 'develop-2'
@@ -64,25 +64,13 @@ class PackagesTable extends AbstractCommand
 
     protected function getRelease($repo)
     {
-        $versions = $this->getVersions($repo);
+        $versions = $this->github->getVersions($repo);
         $version = array_shift($versions);
         if (! $version) {
             return "-";
         }
         $version = str_replace('-', '&#8209;', $version);
         return "[$version](https://github.com/auraphp/{$repo->name}/releases)";
-    }
-
-    protected function getVersions($repo)
-    {
-        $versions = array();
-        $stack = $this->api("GET", "/repos/auraphp/{$repo->name}/releases");
-        foreach ($stack as $json) {
-            foreach ($json as $release) {
-                $versions[] = $release->tag_name;
-            }
-        }
-        return $versions;
     }
 
     protected function getBadges($repo)

@@ -24,7 +24,7 @@ class SystemUpdate extends AbstractCommand
         passthru('git pull');
 
         // update the library packages
-        $repos = $this->apiGetRepos();
+        $repos = $this->github->getRepos();
         foreach ($repos as $repo) {
 
             // only use 'Aura.Package' repositories as packages

@@ -12,10 +12,16 @@ class Common extends Config
 
         $di->params['Aura\Bin\Config']['env'] = $_ENV;
 
+        $di->params['Aura\Bin\Github']= array(
+            'user' => $_ENV['AURA_BIN_GITHUB_USER'],
+            'token' => $_ENV['AURA_BIN_GITHUB_TOKEN'],
+        );
+
         $di->params['Aura\Bin\AbstractCommand'] = array(
             'config' => $di->lazyNew('Aura\Bin\Config'),
             'context' => $di->lazyGet('aura/cli-kernel:context'),
             'stdio' => $di->lazyGet('aura/cli-kernel:stdio'),
+            'github' => $di->lazyNew('Aura\Bin\Github'),
         );
     }
 
