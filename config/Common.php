@@ -23,6 +23,8 @@ class Common extends Config
             'stdio' => $di->lazyGet('aura/cli-kernel:stdio'),
             'github' => $di->lazyNew('Aura\Bin\Github'),
         );
+
+        $di->setter['Aura\Bin\Command\AbstractCommand']['setPhpdoc'] = $di->lazyNew('Aura\Bin\Shell\Phpdoc');
     }
 
     public function modify(Container $di)

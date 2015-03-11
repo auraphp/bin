@@ -31,6 +31,13 @@ class Release2 extends AbstractCommand
         'extra' => array(),
     );
 
+    protected $phpdoc;
+
+    public function setPhpdoc($phpdoc)
+    {
+        $this->phpdoc = $phpdoc;
+    }
+
     public function __invoke()
     {
         $this->prep();
@@ -39,7 +46,7 @@ class Release2 extends AbstractCommand
         $this->checkSupportFiles();
         $this->runTests();
         if (substr($this->package, -8) !== '_Project') {
-            $this->validateDocs($this->package);
+            $this->phpdoc->validate($this->package);
         }
         $this->checkChangeLog();
         $this->checkIssues();

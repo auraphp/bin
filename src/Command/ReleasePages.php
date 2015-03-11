@@ -26,7 +26,7 @@ class ReleasePages extends AbstractCommand
         $this->makePackageDir();
         $this->makeVersionDir();
         $this->writeVersionIndex();
-        $this->writeVersionApi();
+        $this->phpdoc->writeVersionApi($this->version_dir);
         $this->writePackageIndex();
 
         if ($this->commit != 'commit') {
@@ -134,18 +134,6 @@ class ReleasePages extends AbstractCommand
             $this->stdio->outln('Failed.');
             exit(1);
         }
-    }
-
-    protected function writeVersionApi()
-    {
-        $this->stdio->outln("Writing version API docs.");
-        $api_dir = "{$this->version_dir}/api";
-        $cmd = "phpdoc -d ./src -t $api_dir --force --validate";
-        $this->shell($cmd, $output, $return);
-
-        $this->stdio->outln('Remove API cache files.');
-        $this->shell("rm -rf $api_dir/structure.xml");
-        $this->shell("rm -rf $api_dir/phpdoc-cache*");
     }
 
     protected function writePackageIndex()

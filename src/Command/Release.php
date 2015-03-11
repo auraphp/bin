@@ -39,13 +39,20 @@ class Release extends AbstractCommand
 
     protected $composer_json;
 
+    protected $phpdoc;
+
+    public function setPhpdoc($phpdoc)
+    {
+        $this->phpdoc = $phpdoc;
+    }
+
     public function __invoke()
     {
         $this->prep();
         $this->gitCheckout();
         $this->gitPull();
         $this->runTests();
-        $this->validateDocs($this->package);
+        $this->phpdoc->validate($this->package);
         $this->touchSupportFiles();
         $this->checkChanges();
         $this->gitStatus();
@@ -142,34 +149,6 @@ class Release extends AbstractCommand
             $this->stdio->outln($line);
             exit(1);
         }
-    }
-
-    protected function validateDocs($package)
-    {
-        $this->stdio->outln('Validate API docs.');
-
-        // remove previous validation records
-        $target = "/tmp/phpdoc/{$package}";
-        $this->shell("rm -rf {$target}");
-
-        // validate
-        $cmd = "phpdoc -d src/ -t {$target} --force --verbose --template=checkstyle";
-        $line = $this->shell($cmd, $output, $return);
-
-        // remove logs
-        $this->shell('rm -f phpdoc-*.log');
-
-        // validity checks don't seem to work with phpdoc. check output.
-        // lines with 2 space indents look like errors.
-        foreach ($output as $line) {
-            if (substr($line, 0, 2) == '  ') {
-                $this->stdio->outln('API docs not valid.');
-                exit(1);
-            }
-        }
-
-        // guess they're valid
-        $this->stdio->outln('API docs look valid.');
     }
 
     protected function touchSupportFiles()
