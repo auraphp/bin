@@ -104,6 +104,7 @@ class Release2 extends AbstractCommand
             '.travis.yml',
             'CHANGES.md',
             'CONTRIBUTING.md',
+            'LICENSE',
             'README.md',
             'composer.json',
         );
@@ -113,6 +114,13 @@ class Release2 extends AbstractCommand
                 $this->stdio->outln("Please create a '{$file}' file.");
                 exit(1);
             }
+        }
+
+        $license = file_get_contents('LICENSE');
+        $year = date('Y');
+        if (strpos($license, $year) === false) {
+            $this->stdio->outln('The LICENSE copyright year looks out-of-date.');
+            exit(1);
         }
     }
 
