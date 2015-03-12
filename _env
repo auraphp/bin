@@ -23,4 +23,16 @@ AURA_CONFIG_MODE=dev
 
 ### Path to local auraphp.github.io repository
 
-# AURA_BIN_SITE_DIR=
+# AURA_BIN_SITE_DIR=/path/to/auraphp.github.io
+
+### SMTP sending
+
+# AURA_BIN_SMTP_USERNAME=username@gmail.com
+# AURA_BIN_SMTP_PASSWORD=password
+# AURA_BIN_SMTP_HOST=smtp.gmail.com
+# AURA_BIN_SMTP_PORT=587
+# AURA_BIN_SMTP_SECURITY=tls
+
+### Notification emails
+
+# AURA_BIN_EMAIL_FROM=username@gmail.com
