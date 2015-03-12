@@ -18,10 +18,10 @@ class Config
 
     public function __get($key)
     {
-        if (isset($this->values[$key])) {
+        if (array_key_exists($key, $this->values)) {
             return $this->values[$key];
-        } else {
-            return null;
         }
+
+        throw new \Exception("No such config key '$key'");
     }
 }
