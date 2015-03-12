@@ -8,24 +8,71 @@ class Common extends Config
 {
     public function define(Container $di)
     {
+        /**
+         * Services
+         */
         $di->set('aura/project-kernel:logger', $di->newInstance('Monolog\Logger'));
 
-        $di->params['Aura\Bin\Config']['env'] = $_ENV;
-
-        $di->params['Aura\Bin\Github']= array(
-            'user' => $_ENV['AURA_BIN_GITHUB_USER'],
-            'token' => $_ENV['AURA_BIN_GITHUB_TOKEN'],
-        );
-
-        $di->params['Aura\Bin\AbstractCommand'] = array(
+        /**
+         * Aura\Bin\Command\AbstractCommand
+         */
+        $di->params['Aura\Bin\Command\AbstractCommand'] = array(
             'config' => $di->lazyNew('Aura\Bin\Config'),
             'context' => $di->lazyGet('aura/cli-kernel:context'),
             'stdio' => $di->lazyGet('aura/cli-kernel:stdio'),
             'github' => $di->lazyNew('Aura\Bin\Github'),
         );
 
-        $di->setter['Aura\Bin\Command\AbstractCommand']['setPhpdoc'] = $di->lazyNew('Aura\Bin\Shell\Phpdoc');
-        $di->setter['Aura\Bin\Command\AbstractCommand']['setPhpunit'] = $di->lazyNew('Aura\Bin\Shell\Phpunit');
+        /**
+         * Aura\Bin\Command\Docs
+         */
+        $di->setter['Aura\Bin\Command\Docs']['setPhpdoc'] = $di->lazyNew('Aura\Bin\Shell\Phpdoc');
+
+        /**
+         * Aura\Bin\Command\Release
+         */
+        $di->setter['Aura\Bin\Command\Release']['setPhpdoc'] = $di->lazyNew('Aura\Bin\Shell\Phpdoc');
+        $di->setter['Aura\Bin\Command\Release']['setPhpunit'] = $di->lazyNew('Aura\Bin\Shell\Phpunit');
+
+        /**
+         * Aura\Bin\Command\Release2
+         */
+        $di->setter['Aura\Bin\Command\Release2']['setPhpdoc'] = $di->lazyNew('Aura\Bin\Shell\Phpdoc');
+        $di->setter['Aura\Bin\Command\Release2']['setPhpunit'] = $di->lazyNew('Aura\Bin\Shell\Phpunit');
+        $di->setter['Aura\Bin\Command\Release2']['setMailer'] = $di->lazyNew('Aura\Bin\Mailer');
+
+        /**
+         * Aura\Bin\Config
+         */
+        $di->params['Aura\Bin\Config']['env'] = $_ENV;
+
+        /**
+         * Aura\Bin\Github
+         */
+        $di->params['Aura\Bin\Github']= array(
+            'user' => $_ENV['AURA_BIN_GITHUB_USER'],
+            'token' => $_ENV['AURA_BIN_GITHUB_TOKEN'],
+        );
+
+        /**
+         * Aura\Bin\Mailer
+         */
+        $di->params['Aura\Bin\Mailer']['config'] = $di->lazyNew('Aura\Bin\Config');
+
+        $di->params['Aura\Bin\Mailer']['mailer'] = $di->lazy(function () {
+            $transport = \Swift_SmtpTransport::newInstance(
+                $_ENV['AURA_BIN_SMTP_HOST'],
+                $_ENV['AURA_BIN_SMTP_PORT'],
+                $_ENV['AURA_BIN_SMTP_SECURITY']
+            );
+            $transport->setUsername($_ENV['AURA_BIN_SMTP_USERNAME']);
+            $transport->setPassword($_ENV['AURA_BIN_SMTP_PASSWORD']);
+            return \Swift_Mailer::newInstance($transport);
+        });
+
+        $di->params['Aura\Bin\Mailer']['message'] = $di->lazy(
+            array('Swift_Message', 'newInstance')
+        );
     }
 
     public function modify(Container $di)

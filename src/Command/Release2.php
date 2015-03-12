@@ -35,6 +35,8 @@ class Release2 extends AbstractCommand
 
     protected $phpunit;
 
+    protected $mailer;
+
     public function setPhpdoc($phpdoc)
     {
         $this->phpdoc = $phpdoc;
@@ -45,23 +47,27 @@ class Release2 extends AbstractCommand
         $this->phpunit = $phpunit;
     }
 
+    public function setMailer($mailer)
+    {
+        $this->mailer = $mailer;
+    }
+
     public function __invoke()
     {
         $this->prep();
 
-        $this->gitPull();
-        $this->checkSupportFiles();
-        $this->phpunit->v2($this->package);
-        if (substr($this->package, -8) !== '_Project') {
-            $this->phpdoc->validate($this->package);
-        }
-        $this->checkChangeLog();
-        $this->checkIssues();
-        $this->updateComposer();
-        $this->gitStatus();
-        $this->release();
-        // $this->updatePackagesTable();
-        // $this->notifyMailingList();
+        // $this->gitPull();
+        // $this->checkSupportFiles();
+        // $this->phpunit->v2($this->package);
+        // if (substr($this->package, -8) !== '_Project') {
+        //     $this->phpdoc->validate($this->package);
+        // }
+        // $this->checkChangeLog();
+        // $this->checkIssues();
+        // $this->updateComposer();
+        // $this->gitStatus();
+        // $this->release();
+        $this->followup();
         $this->stdio->outln('Done!');
     }
 
@@ -253,7 +259,7 @@ class Release2 extends AbstractCommand
             return;
         }
 
-        $this->stdio->outln("Releasing version {$this->version} via GitHub.");
+        $this->stdio->outln("Releasing version {$this->version} via GitHub ... ");
         $release = (object) array(
             'tag_name' => $this->version,
             'target_commitish' => $this->branch,
@@ -270,6 +276,42 @@ class Release2 extends AbstractCommand
             exit(1);
         }
 
+        $this->outln('success!');
+    }
+
+    protected function followup()
+    {
+        $this->stdio->outln('Getting the tagged release.');
         $this->shell('git pull');
+        $this->followupEmail();
+    }
+
+    protected function followupEmail()
+    {
+        $this->stdio->out('Notifying the mailing list ... ');
+
+        $to = 'auraphp@googlegroups.com';
+        $subject = "New Release: {$this->package} {$this->version}";
+        $changes = trim(file_get_contents('CHANGES.md'));
+        $body = <<<BODY
+Hi everyone!
+
+We have just released {$this->package} version {$this->version}. You can get it from the usual location at <https://github.com/auraphp/{$this->package}/releases>, or update `composer.json` with the new version number. Notes from the change log follow.
+
+* * *
+
+{$changes}
+
+* * *
+
+Please let us know if you have any questions, comments, or concerns about this or any other release.  And thanks, as always, for supporting Aura!
+
+BODY;
+        $result = $this->mailer->send($to, $subject, $body);
+        if (! $result) {
+            $this->stdio->outln('failure.');
+        } else {
+            $this->stdio->outln('success.');
+        }
     }
 }
