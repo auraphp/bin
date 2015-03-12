@@ -56,18 +56,18 @@ class Release2 extends AbstractCommand
     {
         $this->prep();
 
-        // $this->gitPull();
-        // $this->checkSupportFiles();
-        // $this->phpunit->v2($this->package);
-        // if (substr($this->package, -8) !== '_Project') {
-        //     $this->phpdoc->validate($this->package);
-        // }
-        // $this->checkChangeLog();
-        // $this->checkIssues();
-        // $this->updateComposer();
-        // $this->gitStatus();
-        // $this->release();
-        $this->followup();
+        $this->gitPull();
+        $this->checkSupportFiles();
+        $this->phpunit->v2($this->package);
+        if (substr($this->package, -8) !== '_Project') {
+            $this->phpdoc->validate($this->package);
+        }
+        $this->checkChangeLog();
+        $this->checkIssues();
+        $this->updateComposer();
+        $this->gitStatus();
+        $this->release();
+        $this->followupEmail();
         $this->stdio->outln('Done!');
     }
 
@@ -277,13 +277,9 @@ class Release2 extends AbstractCommand
         }
 
         $this->outln('success!');
-    }
 
-    protected function followup()
-    {
         $this->stdio->outln('Getting the tagged release.');
         $this->shell('git pull');
-        $this->followupEmail();
     }
 
     protected function followupEmail()
