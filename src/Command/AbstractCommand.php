@@ -61,6 +61,18 @@ abstract class AbstractCommand
         return trim($branch);
     }
 
+    protected function gitDateToTimestamp($output)
+    {
+        foreach ($output as $line) {
+            if (substr($line, 0, 5) == 'Date:') {
+                $date = trim(substr($line, 5));
+                return strtotime($date);
+            }
+        }
+        $this->stdio->outln('No date found in log.');
+        exit(1);
+    }
+
     protected function isValidVersion($version)
     {
         $format = '^(\d+.\d+.\d+)(-(dev|alpha\d+|beta\d+|RC\d+))?$';

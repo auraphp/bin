@@ -212,18 +212,6 @@ class Release extends AbstractCommand
         $this->stdio->outln('Change log looks up to date.');
     }
 
-    protected function gitDateToTimestamp($output)
-    {
-        foreach ($output as $line) {
-            if (substr($line, 0, 5) == 'Date:') {
-                $date = trim(substr($line, 5));
-                return strtotime($date);
-            }
-        }
-        $this->stdio->outln('No date found in log.');
-        exit(1);
-    }
-
     protected function fetchMeta()
     {
         $this->stdio->outln('Reading meta files.');

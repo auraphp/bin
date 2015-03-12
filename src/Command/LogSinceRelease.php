@@ -15,17 +15,19 @@ class LogSinceRelease extends AbstractCommand
         }
 
         $version = $this->gitLastVersion();
-        $last = exec("git show {$version} --pretty=format:'%H %ci'");
-        list($hash, $date, $time, $zone) = explode(' ', $last);
+
+        exec("git show {$version}", $output, $return);
+        $date = date('r', $this->gitDateToTimestamp($output) + 1);
+
         $package = basename(getcwd());
         $branch = $this->gitCurrentBranch();
-        $message = "Last release was {$version} on {$date} at {$time} {$zone}";
-        $after = "$date $time $zone";
+        $message = "Last release was {$version} on {$date}";
 
         $this->stdio->outln("$package $branch");
         $this->stdio->outln($message);
+        $this->stdio->outln(str_pad('', strlen($message), '-'));
         $this->stdio->outln();
-        passthru("git log --name-status --reverse --after='{$after}'");
+        passthru("git log --name-status --reverse --after='{$date}'");
 
         if ($orig) {
             chdir($orig);
