@@ -40,6 +40,7 @@ class Common extends Config
         $di->setter['Aura\Bin\Command\Release2']['setPhpdoc'] = $di->lazyNew('Aura\Bin\Shell\Phpdoc');
         $di->setter['Aura\Bin\Command\Release2']['setPhpunit'] = $di->lazyNew('Aura\Bin\Shell\Phpunit');
         $di->setter['Aura\Bin\Command\Release2']['setMailer'] = $di->lazyNew('Aura\Bin\Mailer');
+        $di->setter['Aura\Bin\Command\Release2']['setTweeter'] = $di->lazyNew('Aura\Bin\Tweeter');
 
         /**
          * Aura\Bin\Config
@@ -73,6 +74,11 @@ class Common extends Config
         $di->params['Aura\Bin\Mailer']['message'] = $di->lazy(
             array('Swift_Message', 'newInstance')
         );
+
+        /**
+         * Aura\Bin\Tweeter
+         */
+        $di->params['Aura\Bin\Tweeter']['config'] = $di->lazyNew('Aura\Bin\Config');
     }
 
     public function modify(Container $di)

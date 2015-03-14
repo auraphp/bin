@@ -37,6 +37,8 @@ class Release2 extends AbstractCommand
 
     protected $mailer;
 
+    protected $tweeter;
+
     public function setPhpdoc($phpdoc)
     {
         $this->phpdoc = $phpdoc;
@@ -50,6 +52,11 @@ class Release2 extends AbstractCommand
     public function setMailer($mailer)
     {
         $this->mailer = $mailer;
+    }
+
+    public function setTweeter($tweeter)
+    {
+        $this->tweeter = $tweeter;
     }
 
     public function __invoke()
@@ -68,6 +75,7 @@ class Release2 extends AbstractCommand
         $this->gitStatus();
         $this->release();
         $this->followupEmail();
+        $this->followupTweet();
         $this->stdio->outln('Done!');
     }
 
@@ -305,5 +313,14 @@ BODY;
         } else {
             $this->stdio->outln('success.');
         }
+    }
+
+    protected function followupTweet()
+    {
+        $this->stdio->out('Tweeting about the release ... ');
+        $status = "We just released {$this->package} {$this->version}! "
+                . "https://github.com/auraphp/{$this->package}/releases";
+        $this->tweeter->postStatusesUpdate($status);
+        $this->outln("done!");
     }
 }

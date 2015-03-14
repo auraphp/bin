@@ -36,3 +36,10 @@ AURA_CONFIG_MODE=dev
 ### Notification emails
 
 # AURA_BIN_EMAIL_FROM=username@gmail.com
+
+### Tweeting (should be the auraphp account credentials)
+
+# AURA_BIN_TWITTER_CONSUMER_KEY=
+# AURA_BIN_TWITTER_CONSUMER_SECRET=
+# AURA_BIN_TWITTER_ACCESS_TOKEN=
+# AURA_BIN_TWITTER_ACCESS_TOKEN_SECRET=
