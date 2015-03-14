@@ -74,8 +74,6 @@ class Release2 extends AbstractCommand
         $this->updateComposer();
         $this->gitStatus();
         $this->release();
-        $this->followupEmail();
-        $this->followupTweet();
         $this->stdio->outln('Done!');
     }
 
@@ -284,6 +282,9 @@ class Release2 extends AbstractCommand
 
         $this->stdio->outln('Getting the tagged release.');
         $this->shell('git pull');
+
+        $this->followupEmail();
+        $this->followupTweet();
     }
 
     protected function followupEmail()
@@ -321,6 +322,6 @@ BODY;
         $status = "We just released {$this->package} {$this->version}! "
                 . "https://github.com/auraphp/{$this->package}/releases";
         $this->tweeter->postStatusesUpdate($status);
-        $this->outln("done!");
+        $this->outln("success!");
     }
 }
