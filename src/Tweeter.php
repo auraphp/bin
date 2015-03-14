@@ -1,5 +1,5 @@
 <?php
-namespace Auraphp\Bin;
+namespace Aura\Bin;
 
 use TwitterOAuth\Auth\SingleUserAuth;
 use TwitterOAuth\Serializer\ArraySerializer;
