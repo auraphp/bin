@@ -297,13 +297,9 @@ class Release2 extends AbstractCommand
         $body = <<<BODY
 Hi everyone!
 
-We have just released {$this->package} version {$this->version}. You can get it from the usual location at <https://github.com/auraphp/{$this->package}/releases>, or update `composer.json` with the new version number. Notes from the change log follow.
-
-* * *
+We have just released {$this->package} version {$this->version}. You can get it from the usual location at <https://github.com/auraphp/{$this->package}/releases>, or update `composer.json` with the new version number.
 
 {$changes}
-
-* * *
 
 Please let us know if you have any questions, comments, or concerns about this or any other release.  And thanks, as always, for supporting Aura!
 
