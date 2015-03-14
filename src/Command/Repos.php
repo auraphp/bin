@@ -7,9 +7,16 @@ class Repos extends AbstractCommand
     {
         $list = $this->github->getRepos();
         foreach ($list as $repo) {
+            $this->stdio->out($repo->name);
             $tags = $this->github->getTags($repo->name);
-            $last = end($tags);
-            $this->stdio->outln("$repo->name $last");
+            $tag = end($tags);
+            if (! $tag) {
+                $this->stdio->outln(' (no releases)');
+                continue;
+            }
+            $commit = $this->github->getCommit($repo->name, $tag->commit->sha);
+            $date = date('Y-m-d', strtotime($commit->committer->date));
+            $this->stdio->outln(" {$date} {$tag->name}");
         }
     }
 }

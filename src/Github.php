@@ -10,7 +10,7 @@ class Github
         $this->github = "https://{$user}:{$token}@api.github.com";
     }
 
-    public function api($method, $path, $body = null)
+    public function api($method, $path, $body = null, $one = false)
     {
         if (strpos($path, '?') === false) {
             $path .= '?';
@@ -39,7 +39,8 @@ class Github
             $json = json_decode($data);
 
             // for POST etc, do not try additional pages
-            if (strtolower($method) !== 'get') {
+            $one_page_only = strtolower($method) !== 'get' || $one == true;
+            if ($one_page_only) {
                 return $json;
             }
 
@@ -75,11 +76,16 @@ class Github
         $tags = [];
         foreach ($stack as $json) {
             foreach ($json as $tag) {
-                $tags[] = $tag->name;
+                $tags[$tag->name] = $tag;
             }
         }
-        usort($tags, 'version_compare');
+        uksort($tags, 'version_compare');
         return $tags;
+    }
+
+    public function getCommit($repoName, $sha)
+    {
+        return $this->api('GET', "/repos/auraphp/{$repoName}/git/commits/{$sha}", null, true);
     }
 
     public function getIssues($repoName)
