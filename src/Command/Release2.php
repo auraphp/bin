@@ -278,7 +278,7 @@ class Release2 extends AbstractCommand
             exit(1);
         }
 
-        $this->outln('success!');
+        $this->stdio->outln('success!');
 
         $this->stdio->outln('Getting the tagged release.');
         $this->shell('git pull');
