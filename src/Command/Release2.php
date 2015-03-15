@@ -318,6 +318,6 @@ BODY;
         $status = "We just released {$this->package} {$this->version}! "
                 . "https://github.com/auraphp/{$this->package}/releases";
         $this->tweeter->postStatusesUpdate($status);
-        $this->outln("success!");
+        $this->stdio->outln("success.");
     }
 }
