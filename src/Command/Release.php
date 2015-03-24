@@ -397,7 +397,8 @@ class Release extends AbstractCommand
         $this->stdio->outln('Checking repo status.');
         $this->shell('git status', $output, $return);
         $output = implode(PHP_EOL, $output) . PHP_EOL;
-        $ok = "# On branch {$this->branch}" . PHP_EOL
+        $ok = "On branch {$this->branch}" . PHP_EOL
+            . "Your branch is up-to-date with 'origin/{$this->branch}'." . PHP_EOL
             . 'nothing to commit, working directory clean' . PHP_EOL;
 
         if ($return || $output != $ok) {
