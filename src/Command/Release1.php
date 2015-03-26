@@ -15,7 +15,7 @@ namespace Aura\Bin\Command;
  *   case anyway?
  *
  */
-class Release extends AbstractCommand
+class Release1 extends AbstractCommand
 {
     protected $package;
 

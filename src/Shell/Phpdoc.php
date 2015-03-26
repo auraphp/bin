@@ -36,9 +36,9 @@ class Phpdoc extends AbstractShell
                 continue;
             }
 
-            // class-level tag
+            // class-level tag (don't care about file-level)
             $actual = $file->class['package'] . $file->interface['package'];
-            if ($actual != $expect) {
+            if ($actual && $actual != $expect) {
                 $missing = true;
                 $this->stdio->errln("  Expected @package {$expect}, actual @package {$actual}, for class {$class}");
             }

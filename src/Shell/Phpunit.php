@@ -30,28 +30,15 @@ class Phpunit extends AbstractShell
     public function v2library()
     {
         $this->stdio->outln("Running library unit tests.");
-        $cmd = 'phpunit -c tests/unit/';
-        $line = $this($cmd, $output, $return);
+        if (! file_exists('./vendor/autoload.php')) {
+            $this('composer install');
+        }
+        $line = $this('phpunit', $output, $return);
         if ($return == 1 || $return == 2) {
             $this->stdio->errln($line);
             exit(1);
         }
-
-        $dir = getcwd() . '/tests/container';
-        if (! is_dir($dir)) {
-            $this->stdio->outln("No library container tests.");
-            return;
-        }
-
-        $this->stdio->outln("Running library container tests.");
-        $cmd = 'cd tests/container; ./phpunit.sh';
-        $line = $this($cmd, $output, $return);
-        if ($return == 1 || $return == 2) {
-            $this->stdio->errln($line);
-            exit(1);
-        }
-
-        $this('cd tests/container; rm -rf composer.* vendor');
+        $this('rm -rf composer.lock vendor');
     }
 
     public function v2kernel()
@@ -77,5 +64,4 @@ class Phpunit extends AbstractShell
         }
         $this('rm -rf composer.lock vendor tmp/log/*.log');
     }
-
 }
