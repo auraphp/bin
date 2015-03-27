@@ -30,9 +30,14 @@ class Phpunit extends AbstractShell
     public function v2library()
     {
         $this->stdio->outln("Running library unit tests.");
-        if (! file_exists('./vendor/autoload.php')) {
+
+        $composer = json_decode(file_get_contents('./composer.json'));
+        $install = isset($composer->{'require-dev'})
+                && ! file_exists('./vendor/autoload.php');
+        if ($install) {
             $this('composer install');
         }
+
         $line = $this('phpunit', $output, $return);
         if ($return == 1 || $return == 2) {
             $this->stdio->errln($line);
