@@ -37,6 +37,8 @@ class Release2 extends AbstractCommand
 
     protected $mailer;
 
+    protected $ironmq;
+
     protected $tweeter;
 
     public function setPhpdoc($phpdoc)
@@ -52,6 +54,11 @@ class Release2 extends AbstractCommand
     public function setMailer($mailer)
     {
         $this->mailer = $mailer;
+    }
+
+    public function setIronMQ($ironmq)
+    {
+        $this->ironmq = $ironmq;
     }
 
     public function setTweeter($tweeter)
@@ -283,8 +290,20 @@ class Release2 extends AbstractCommand
         $this->stdio->outln('Getting the tagged release.');
         $this->shell('git pull');
 
-        $this->followupEmail();
+        // $this->followupEmail();
+        $this->followupEmailToQueue();
         $this->followupTweet();
+    }
+
+    protected function followupEmailToQueue()
+    {
+        $changes = trim(file_get_contents('CHANGES.md'));
+        $data = array(
+            'package' => $this->package,
+            'version' => $this->version,
+            'changes' => $changes
+        );
+        $this->ironmq->postMessage('notifications', json_encode($data));
     }
 
     protected function followupEmail()

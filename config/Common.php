@@ -40,6 +40,7 @@ class Common extends Config
         $di->setter['Aura\Bin\Command\Release2']['setPhpdoc'] = $di->lazyNew('Aura\Bin\Shell\Phpdoc');
         $di->setter['Aura\Bin\Command\Release2']['setPhpunit'] = $di->lazyNew('Aura\Bin\Shell\Phpunit');
         $di->setter['Aura\Bin\Command\Release2']['setMailer'] = $di->lazyNew('Aura\Bin\Mailer');
+        $di->setter['Aura\Bin\Command\Release2']['setIronMQ'] = $di->lazyNew('IronMQ\IronMQ');
         $di->setter['Aura\Bin\Command\Release2']['setTweeter'] = $di->lazyNew('Aura\Bin\Tweeter');
 
         /**
@@ -79,6 +80,16 @@ class Common extends Config
          * Aura\Bin\Tweeter
          */
         $di->params['Aura\Bin\Tweeter']['config'] = $di->lazyNew('Aura\Bin\Config');
+
+        // IronMQ
+        $di->params['IronMQ\IronMQ']['config'] = array(
+            "token" => $_ENV['AURA_BIN_IRON_TOKEN'],
+            "project_id" => $_ENV['AURA_BIN_IRON_PROJECT_ID'],
+        );
+
+        // Send email notifications
+        $di->setter['Aura\Bin\Command\SendEmailNotification']['setIronMQ'] = $di->lazyNew('IronMQ\IronMQ');
+        $di->setter['Aura\Bin\Command\SendEmailNotification']['setMailer'] = $di->lazyNew('Aura\Bin\Mailer');
     }
 
     public function modify(Container $di)
@@ -106,19 +117,20 @@ class Common extends Config
     protected function modifyCliDispatcher(Container $di)
     {
         $di->get('aura/cli-kernel:dispatcher')->addObjects(array(
-            'docs'              => $di->lazyNew('Aura\Bin\Command\Docs'),
-            'issues'            => $di->lazyNew('Aura\Bin\Command\Issues'),
-            'log-since-release' => $di->lazyNew('Aura\Bin\Command\LogSinceRelease'),
-            'packagist'         => $di->lazyNew('Aura\Bin\Command\Packagist'),
-            'packages-table'    => $di->lazyNew('Aura\Bin\Command\PackagesTable'),
-            'release1'          => $di->lazyNew('Aura\Bin\Command\Release1'),
-            'release2'          => $di->lazyNew('Aura\Bin\Command\Release2'),
-            'release1-pages'    => $di->lazyNew('Aura\Bin\Command\ReleasePages'),
-            'repos'             => $di->lazyNew('Aura\Bin\Command\Repos'),
-            'system-release'    => $di->lazyNew('Aura\Bin\Command\SystemRelease'),
-            'system-status'     => $di->lazyNew('Aura\Bin\Command\SystemStatus'),
-            'system-update'     => $di->lazyNew('Aura\Bin\Command\SystemUpdate'),
-            'travis'            => $di->lazyNew('Aura\Bin\Command\Travis'),
+            'docs'               => $di->lazyNew('Aura\Bin\Command\Docs'),
+            'issues'             => $di->lazyNew('Aura\Bin\Command\Issues'),
+            'log-since-release'  => $di->lazyNew('Aura\Bin\Command\LogSinceRelease'),
+            'packagist'          => $di->lazyNew('Aura\Bin\Command\Packagist'),
+            'packages-table'     => $di->lazyNew('Aura\Bin\Command\PackagesTable'),
+            'release1'           => $di->lazyNew('Aura\Bin\Command\Release1'),
+            'release2'           => $di->lazyNew('Aura\Bin\Command\Release2'),
+            'release1-pages'     => $di->lazyNew('Aura\Bin\Command\ReleasePages'),
+            'repos'              => $di->lazyNew('Aura\Bin\Command\Repos'),
+            'system-release'     => $di->lazyNew('Aura\Bin\Command\SystemRelease'),
+            'system-status'      => $di->lazyNew('Aura\Bin\Command\SystemStatus'),
+            'system-update'      => $di->lazyNew('Aura\Bin\Command\SystemUpdate'),
+            'travis'             => $di->lazyNew('Aura\Bin\Command\Travis'),
+            'email-notification' => $di->lazyNew('Aura\Bin\Command\SendEmailNotification'),
         ));
     }
 
