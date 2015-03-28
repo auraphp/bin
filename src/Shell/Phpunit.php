@@ -30,7 +30,7 @@ class Phpunit extends AbstractShell
 
         $phpunit = 'phpunit';
         if (file_exists('./phpunit.sh')) {
-            $phpunit = 'phpunit.sh';
+            $phpunit = './phpunit.sh';
         }
 
         $line = $this($phpunit, $output, $return);
