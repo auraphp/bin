@@ -1,7 +1,8 @@
 <?php
 namespace Aura\Bin\Command;
 
-// invoke from inside the pacakge dir
+use \StdClass;
+
 class Travis extends AbstractCommand
 {
     public function __invoke()

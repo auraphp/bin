@@ -1,7 +1,8 @@
 <?php
 namespace Aura\Bin\Command;
 
-// invoke from inside the package dir
+use StdClass;
+
 class Packagist extends AbstractCommand
 {
     public function __invoke()
@@ -47,7 +48,7 @@ class Packagist extends AbstractCommand
         $this->stdio->out("Checking hook on {$repo} ... ");
 
         $hooks = $this->github->getHooks($repo);
-        foreach ($stack as $json) {
+        foreach ($hooks as $hook) {
             if ($hook->name == 'packagist') {
                 $this->stdio->outln('already exists.');
                 return;
