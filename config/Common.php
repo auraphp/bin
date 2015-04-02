@@ -122,6 +122,7 @@ class Common extends Config
             'log-since-release'  => $di->lazyNew('Aura\Bin\Command\LogSinceRelease'),
             'packagist'          => $di->lazyNew('Aura\Bin\Command\Packagist'),
             'packages-table'     => $di->lazyNew('Aura\Bin\Command\PackagesTable'),
+            'packages-json'      => $di->lazyNew('Aura\Bin\Command\PackagesJson'),
             'release1'           => $di->lazyNew('Aura\Bin\Command\Release1'),
             'release2'           => $di->lazyNew('Aura\Bin\Command\Release2'),
             'release1-pages'     => $di->lazyNew('Aura\Bin\Command\ReleasePages'),
