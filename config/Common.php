@@ -29,10 +29,10 @@ class Common extends Config
         $di->setter['Aura\Bin\Command\Docs']['setPhpdoc'] = $di->lazyNew('Aura\Bin\Shell\Phpdoc');
 
         /**
-         * Aura\Bin\Command\Release
+         * Aura\Bin\Command\Release1
          */
-        $di->setter['Aura\Bin\Command\Release']['setPhpdoc'] = $di->lazyNew('Aura\Bin\Shell\Phpdoc');
-        $di->setter['Aura\Bin\Command\Release']['setPhpunit'] = $di->lazyNew('Aura\Bin\Shell\Phpunit');
+        $di->setter['Aura\Bin\Command\Release1']['setPhpdoc'] = $di->lazyNew('Aura\Bin\Shell\Phpdoc');
+        $di->setter['Aura\Bin\Command\Release1']['setPhpunit'] = $di->lazyNew('Aura\Bin\Shell\Phpunit');
 
         /**
          * Aura\Bin\Command\Release2
