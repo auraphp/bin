@@ -1,6 +1,8 @@
 <?php
 namespace Aura\Bin\Shell;
 
+use Aura\Bin\Exception;
+
 class Phpdoc extends AbstractShell
 {
     public function validate($package)
@@ -45,16 +47,14 @@ class Phpdoc extends AbstractShell
         }
 
         if ($missing) {
-            $this->stdio->errln('API docs not valid.');
-            exit(1);
+            throw new Exception('API docs not valid.');
         }
 
         // are there other invalidities?
         foreach ($output as $line) {
             // invalid lines have 2-space indents
             if (substr($line, 0, 2) == '  ') {
-                $this->stdio->errln('API docs not valid.');
-                exit(1);
+                throw new Exception('API docs not valid.');
             }
         }
 
