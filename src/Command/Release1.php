@@ -1,6 +1,8 @@
 <?php
 namespace Aura\Bin\Command;
 
+use Aura\Bin\Exception;
+
 /**
  *
  * - `aura release` to preflight on the current branch
@@ -61,7 +63,11 @@ class Release1 extends AbstractCommand
         $this->phpunit->v1();
         $this->phpdoc->validate($this->package);
         $this->touchSupportFiles();
-        $this->checkChanges();
+
+        if (! $this->checkChanges()) {
+            return 1;
+        }
+
         $this->gitStatus();
 
         // check travis
@@ -69,7 +75,7 @@ class Release1 extends AbstractCommand
 
         if (! $this->version) {
             $this->stdio->outln('No version specified; done.');
-            exit(0);
+            return;
         }
 
         $this->stdio->outln("Prepare composer.json file for {$this->version}.");
@@ -86,7 +92,7 @@ class Release1 extends AbstractCommand
             $this->stdio->outln('    git checkout develop; \\');
             $this->stdio->outln("    git branch -D {$this->version}; \\");
             $this->stdio->outln('Done!');
-            exit(0);
+            return;
         }
 
         $this->stdio->outln('Commit to release: merge, tag, and push.');
@@ -114,13 +120,12 @@ class Release1 extends AbstractCommand
         }
 
         if (! $this->isValidVersion($this->version)) {
-            $this->stdio->outln("Version '{$this->version}' invalid.");
-            $this->stdio->outln("Please use the format '0.1.5(-dev|-alpha0|-beta1|-RC5)'.");
-            exit(1);
+            $message = "Version '{$this->version}' invalid. "
+                     . "Please use the format '0.1.5(-dev|-alpha0|-beta1|-RC5)'.";
+            throw new Exception($message);
         }
 
         $this->stdio->outln("Version: {$this->version}");
-
         $this->commit = array_shift($argv);
     }
 
@@ -134,7 +139,7 @@ class Release1 extends AbstractCommand
         $this->stdio->outln("Checkout {$this->branch}.");
         $this->shell("git checkout {$this->branch}", $output, $return);
         if ($return) {
-            exit($return);
+            throw new Exception('', $return);
         }
     }
 
@@ -143,7 +148,7 @@ class Release1 extends AbstractCommand
         $this->stdio->outln("Pull {$this->branch}.");
         $this->shell('git pull', $output, $return);
         if ($return) {
-            exit($return);
+            throw new Exception('', $return);
         }
     }
 
@@ -175,13 +180,11 @@ class Release1 extends AbstractCommand
         }
 
         if (! $this->isReadableFile('composer.json')) {
-            $this->stdio->outln('Please create a composer.json file.');
-            exit(1);
+            throw new Exception('Please create a composer.json file.');
         }
 
         if (! $this->isReadableFile('.travis.yml')) {
-            $this->stdio->outln('Please create a .travis.yml file.');
-            exit(1);
+            throw new Exception('Please create a .travis.yml file.');
         }
     }
 
@@ -206,10 +209,11 @@ class Release1 extends AbstractCommand
             $this->stdio->outln("Check the log using 'git log --name-only'");
             $this->stdio->outln('and note changes back to ' . date('D M j H:i:s Y', $src_timestamp));
             $this->stdio->outln('Then commit the meta/changes.txt file.');
-            exit(1);
+            return false;
         }
 
         $this->stdio->outln('Change log looks up to date.');
+        return true;
     }
 
     protected function fetchMeta()
@@ -251,8 +255,7 @@ class Release1 extends AbstractCommand
 
         if (! $authors) {
             $this->stdio->outln('not OK.');
-            $this->stdio->outln('Authors file is empty. Please add at least one author.');
-            exit(1);
+            throw new Exception('Authors file is empty. Please add at least one author.');
         }
 
         $base = [[
@@ -269,8 +272,7 @@ class Release1 extends AbstractCommand
         $this->summary = trim(file_get_contents($file));
         if (! $this->summary) {
             $this->stdio->outln('not OK.');
-            $this->stdio->outln('Summary file is empty. Please add a one-line summary.');
-            exit(1);
+            throw new Exception('Summary file is empty. Please add a one-line summary.');
         }
     }
 
@@ -280,8 +282,7 @@ class Release1 extends AbstractCommand
         $this->description = trim(file_get_contents($file));
         if (! $this->description) {
             $this->stdio->outln('not OK.');
-            $this->stdio->outln('Description file is empty. Please add a full description.');
-            exit(1);
+            throw new Exception('Description file is empty. Please add a full description.');
         }
     }
 
@@ -291,8 +292,7 @@ class Release1 extends AbstractCommand
         $this->changes = file_get_contents($file);
         if (! $this->changes) {
             $this->stdio->outln('not OK.');
-            $this->stdio->outln('Changes file is empty. Please add change notes.');
-            exit(1);
+            throw new Exception('Changes file is empty. Please add change notes.');
         }
     }
 
@@ -302,8 +302,7 @@ class Release1 extends AbstractCommand
         $data = trim(file_get_contents($file));
         if (! $data) {
             $this->stdio->outln('not OK.');
-            $this->stdio->outln('Keywords file is empty. Please add at least one keyword.');
-            exit(1);
+            throw new Exception('Keywords file is empty. Please add at least one keyword.');
         }
         $words = explode(',', $data);
         foreach ($words as $word) {
@@ -324,8 +323,7 @@ class Release1 extends AbstractCommand
 
         if (! $require) {
             $this->stdio->outln('not OK.');
-            $this->stdio->outln('Require file is empty. Please add at least one require line.');
-            exit(1);
+            throw new Exception('Require file is empty. Please add at least one require line.');
         }
 
         $this->require = $require;
@@ -337,8 +335,7 @@ class Release1 extends AbstractCommand
         $this->readme = trim(file_get_contents($file));
         if (! $this->readme) {
             $this->stdio->outln('not OK.');
-            $this->stdio->outln('Readme file is empty. Please add a README.md file.');
-            exit(1);
+            throw new Exception('Readme file is empty. Please add a README.md file.');
         }
     }
 
@@ -376,9 +373,8 @@ class Release1 extends AbstractCommand
         $result = $this->shell($cmd, $output, $return);
         if ( $return) {
             $this->stdio->outln('Not OK.');
-            $this->stdio->outln('Composer file is not valid.');
             $this->stdio->outln('Still on version branch.');
-            exit(1);
+            throw new Exception('Composer file is not valid.');
         }
 
         // commit it
@@ -402,8 +398,7 @@ class Release1 extends AbstractCommand
             . 'nothing to commit, working directory clean' . PHP_EOL;
 
         if ($return || $output != $ok) {
-            $this->stdio->outln('Not ready.');
-            exit(1);
+            throw new Exception('Not ready.');
         }
 
         $this->stdio->outln('Status OK.');
@@ -415,8 +410,7 @@ class Release1 extends AbstractCommand
         $cmd = "git checkout -b {$this->version}";
         $last = $this->shell($cmd, $output, $return);
         if ($return) {
-            $this->stdio->outln('Failure.');
-            exit(1);
+            throw new Exception('Failure.', $return);
         }
         $this->stdio->outln('Success.');
     }
@@ -434,15 +428,13 @@ class Release1 extends AbstractCommand
         // now merge from the version branch
         $this->shell("git merge --no-ff {$this->version}", $output, $return);
         if ($return) {
-            $this->stdio->outln('Something went wrong.');
-            exit($return);
+            throw new Exception('Something went wrong.');
         }
 
         // delete the version branch
         $this->shell("git branch -d {$this->version}", $output, $return);
         if ($return) {
-            $this->stdio->outln('Something went wrong.');
-            exit($return);
+            throw new Exception('Something went wrong.');
         }
 
         // tag the version
