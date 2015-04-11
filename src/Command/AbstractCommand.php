@@ -2,6 +2,7 @@
 namespace Aura\Bin\Command;
 
 use Aura\Bin\Config;
+use Aura\Bin\Exception;
 use Aura\Bin\Github;
 use Aura\Cli\Stdio;
 use Aura\Cli\Context;
@@ -55,8 +56,7 @@ abstract class AbstractCommand
     {
         $branch = exec('git rev-parse --abbrev-ref HEAD', $output, $return);
         if ($return) {
-            $this->stdio->outln(implode(PHP_EOL, $output));
-            exit($return);
+            throw new Exception(implode(PHP_EOL, $output), $return);
         }
         return trim($branch);
     }
@@ -69,8 +69,7 @@ abstract class AbstractCommand
                 return strtotime($date);
             }
         }
-        $this->stdio->outln('No date found in log.');
-        exit(1);
+        throw new Exception('No date found in log.');
     }
 
     protected function isValidVersion($version)
