@@ -1,6 +1,8 @@
 <?php
 namespace Aura\Bin\Command;
 
+use Aura\Bin\Exception;
+
 class Issues extends AbstractCommand
 {
     public function __invoke()
@@ -25,7 +27,7 @@ class Issues extends AbstractCommand
 
         if (! $issues) {
             $this->stdio->outln("No issues found.");
-            exit(0);
+            return;
         }
 
         foreach ($list as $name) {
