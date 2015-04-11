@@ -1,13 +1,17 @@
 <?php
 namespace Aura\Bin\Command;
 
-use \StdClass;
+use Aura\Bin\Exception;
+use StdClass;
 
 class Travis extends AbstractCommand
 {
     public function __invoke()
     {
-        $this->checkFile();
+        if (! $this->checkFile()) {
+            return 1;
+        }
+
         $this->checkHook();
     }
 
@@ -17,7 +21,7 @@ class Travis extends AbstractCommand
         $file = $dir . '/.travis.yml';
         if ($this->isReadableFile($file)) {
             $this->stdio->outln('Travis file exists.');
-            return;
+            return true;
         }
 
         $this->stdio->out('Creating Travis file ... ');
@@ -27,7 +31,7 @@ class Travis extends AbstractCommand
         $this->stdio->outln('You should add, commit, and push the new file.');
         $this->stdio->outln('You should also merge it to master.');
         $this->stdio->outln('Then re-run this command.');
-        exit(1);
+        return false;
     }
 
     protected function checkHook()
@@ -39,7 +43,7 @@ class Travis extends AbstractCommand
         foreach ($hooks as $hook) {
             if ($hook->name == 'travis') {
                 $this->stdio->outln('already exists.');
-                return;
+                return true;
             }
         }
 
@@ -57,11 +61,12 @@ class Travis extends AbstractCommand
         $response = $this->github->postHook($repo, $hook);
         if (! isset($response->id)) {
             $this->stdio->outln('failure.');
-            $this->stdio->outln(var_export((array) $response, true));
-            exit(1);
+            $message = var_export((array) $response, true);
+            throw new Exception($message);
         }
 
         $this->stdio->outln('success.');
+        return true;
     }
 
     protected function getYaml()
@@ -71,9 +76,17 @@ language: php
 php:
   - 5.4
   - 5.5
+  - 5.6
+  - 7
+  - hhvm
 before_script:
-  - cd tests
-script: phpunit
+  - composer self-update
+  - composer install
+script:
+  - phpunit --coverage-clover=coverage.clover
+after_script:
+  - wget https://scrutinizer-ci.com/ocular.phar
+  - php ocular.phar code-coverage:upload --format=php-clover coverage.clover
 
 YAML;
     }

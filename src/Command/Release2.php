@@ -1,6 +1,8 @@
 <?php
 namespace Aura\Bin\Command;
 
+use Aura\Bin\Exception;
+
 /**
  *
  * Works always and only on the current branch.
@@ -76,7 +78,11 @@ class Release2 extends AbstractCommand
         if (substr($this->package, -8) !== '_Project') {
             $this->phpdoc->validate($this->package);
         }
-        $this->checkChangeLog();
+
+        if (! $this->checkChangeLog()) {
+            return 1;
+        }
+
         $this->checkIssues();
         $this->updateComposer();
         $this->gitStatus();
@@ -96,9 +102,9 @@ class Release2 extends AbstractCommand
 
         $this->version = array_shift($argv);
         if ($this->version && ! $this->isValidVersion($this->version)) {
-            $this->stdio->outln("Version '{$this->version}' invalid.");
-            $this->stdio->outln("Please use the format '0.1.5(-dev|-alpha0|-beta1|-RC5)'.");
-            exit(1);
+            $message = "Version '{$this->version}' invalid. "
+                     . "Please use the format '0.1.5(-dev|-alpha0|-beta1|-RC5)'.";
+            throw new Exception($message);
         }
     }
 
@@ -107,7 +113,7 @@ class Release2 extends AbstractCommand
         $this->stdio->outln("Pull {$this->branch}.");
         $this->shell('git pull', $output, $return);
         if ($return) {
-            exit($return);
+            throw new Exception('', $return);
         }
     }
 
@@ -124,16 +130,14 @@ class Release2 extends AbstractCommand
 
         foreach ($files as $file) {
             if (! $this->isReadableFile($file)) {
-                $this->stdio->outln("Please create a '{$file}' file.");
-                exit(1);
+                throw new Exception("Please create a '{$file}' file.");
             }
         }
 
         $license = file_get_contents('LICENSE');
         $year = date('Y');
         if (strpos($license, $year) === false) {
-            $this->stdio->outln('The LICENSE copyright year looks out-of-date.');
-            exit(1);
+            throw new Exception('The LICENSE copyright year looks out-of-date.');
         }
     }
 
@@ -159,10 +163,11 @@ class Release2 extends AbstractCommand
             $this->stdio->outln("Add changes from the log ...");
             $this->stdio->outln("    git log --name-only --since='$since' --reverse");
             $this->stdio->outln('... then commit the CHANGES.md file.');
-            exit(1);
+            return false;
         }
 
         $this->stdio->outln('Change log looks up to date.');
+        return true;
     }
 
     protected function checkIssues()
@@ -243,8 +248,7 @@ class Release2 extends AbstractCommand
         $result = $this->shell($cmd, $output, $return);
         if ( $return) {
             $this->stdio->outln('Not OK.');
-            $this->stdio->outln('Composer file is not valid.');
-            exit(1);
+            throw new Exception('Composer file is not valid.');
         }
         $this->stdio->outln('OK.');
     }
@@ -254,8 +258,7 @@ class Release2 extends AbstractCommand
         $this->stdio->outln('Checking repo status.');
         $this->shell('git status --porcelain', $output, $return);
         if ($return || $output) {
-            $this->stdio->outln('Not ready.');
-            exit(1);
+            throw new Exception('Not ready.');
         }
 
         $this->stdio->outln('Status OK.');
@@ -268,7 +271,7 @@ class Release2 extends AbstractCommand
             return;
         }
 
-        $this->stdio->outln("Releasing version {$this->version} via GitHub ... ");
+        $this->stdio->out("Releasing version {$this->version} via GitHub ... ");
         $release = (object) array(
             'tag_name' => $this->version,
             'target_commitish' => $this->branch,
@@ -281,8 +284,8 @@ class Release2 extends AbstractCommand
         $response = $this->github->postRelease($this->package, $release);
         if (! isset($response->id)) {
             $this->stdio->outln('failure.');
-            $this->stdio->outln(var_export((array) $response, true));
-            exit(1);
+            $message = var_export((array) $response, true);
+            throw new Exception($message);
         }
 
         $this->stdio->outln('success!');

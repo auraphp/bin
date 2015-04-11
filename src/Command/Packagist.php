@@ -1,13 +1,17 @@
 <?php
 namespace Aura\Bin\Command;
 
+use Aura\Bin\Exception;
 use StdClass;
 
 class Packagist extends AbstractCommand
 {
     public function __invoke()
     {
-        $this->checkFile();
+        if (! $this->checkFile()) {
+            return 1;
+        }
+
         $this->validateFile();
         $this->checkHook();
     }
@@ -18,7 +22,7 @@ class Packagist extends AbstractCommand
         $file = $dir . '/composer.json';
         if ($this->isReadableFile($file)) {
             $this->stdio->outln('Composer file exists.');
-            return;
+            return true;
         }
 
         $this->stdio->out('Creating composer file ... ');
@@ -28,15 +32,14 @@ class Packagist extends AbstractCommand
         $this->stdio->outln('You should add, commit, and push the new file.');
         $this->stdio->outln('You should also merge it to master.');
         $this->stdio->outln('Then re-run this command.');
-        exit(1);
+        return false;
     }
 
     protected function validateFile()
     {
         $this->shell('composer validate', $output, $return);
         if ($return) {
-            $this->stdio->outln('Composer file is not valid.');
-            exit(1);
+            throw new Exception('Composer file is not valid.');
         }
         $this->stdio->outln('Composer file is valid.');
     }
@@ -68,9 +71,8 @@ class Packagist extends AbstractCommand
 
         $response = $this->github->postHook($repo, $hook);
         if (! isset($response->id)) {
-            $this->stdio->outln('failure.');
-            $this->stdio->outln(var_export((array) $response, true));
-            exit(1);
+            $message = 'Failure. ' . var_export((array) $response, true);
+            throw new Exception($messages);
         }
 
         $this->stdio->outln('success.');
