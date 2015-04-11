@@ -1,6 +1,8 @@
 <?php
 namespace Aura\Bin\Shell;
 
+use Aura\Bin\Exception;
+
 class Phpunit extends AbstractShell
 {
     public function v1()
@@ -9,8 +11,7 @@ class Phpunit extends AbstractShell
         $cmd = 'cd tests; phpunit';
         $line = $this($cmd, $output, $return);
         if ($return == 1 || $return == 2) {
-            $this->stdio->outln($line);
-            exit(1);
+            throw new Exception($line);
         }
     }
 
@@ -34,9 +35,8 @@ class Phpunit extends AbstractShell
         }
 
         $line = $this($phpunit, $output, $return);
-        if ($return == 1 || $return == 2) {
-            $this->stdio->errln($line);
-            exit(1);
+        if ($return) {
+            throw new Exception($line);
         }
         $this('rm -rf composer.lock vendor');
     }
