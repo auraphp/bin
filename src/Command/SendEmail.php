@@ -4,7 +4,7 @@ namespace Aura\Bin\Command;
 /**
  * Sending email notification via IronMQ and later fetching the result and sending
  */
-class SendEmailNotification extends AbstractCommand
+class SendEmail extends AbstractCommand
 {
     protected $ironmq;
 

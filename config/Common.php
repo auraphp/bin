@@ -120,18 +120,14 @@ class Common extends Config
             'docs'               => $di->lazyNew('Aura\Bin\Command\Docs'),
             'issues'             => $di->lazyNew('Aura\Bin\Command\Issues'),
             'log-since-release'  => $di->lazyNew('Aura\Bin\Command\LogSinceRelease'),
-            'packagist'          => $di->lazyNew('Aura\Bin\Command\Packagist'),
-            'packages-table'     => $di->lazyNew('Aura\Bin\Command\PackagesTable'),
             'packages-json'      => $di->lazyNew('Aura\Bin\Command\PackagesJson'),
+            'packagist'          => $di->lazyNew('Aura\Bin\Command\Packagist'),
             'release1'           => $di->lazyNew('Aura\Bin\Command\Release1'),
             'release2'           => $di->lazyNew('Aura\Bin\Command\Release2'),
-            'release1-pages'     => $di->lazyNew('Aura\Bin\Command\ReleasePages'),
+            'readme'             => $di->lazyNew('Aura\Bin\Command\Readme'),
             'repos'              => $di->lazyNew('Aura\Bin\Command\Repos'),
-            'system-release'     => $di->lazyNew('Aura\Bin\Command\SystemRelease'),
-            'system-status'      => $di->lazyNew('Aura\Bin\Command\SystemStatus'),
-            'system-update'      => $di->lazyNew('Aura\Bin\Command\SystemUpdate'),
+            'send-email'         => $di->lazyNew('Aura\Bin\Command\SendEmail'),
             'travis'             => $di->lazyNew('Aura\Bin\Command\Travis'),
-            'email-notification' => $di->lazyNew('Aura\Bin\Command\SendEmailNotification'),
         ));
     }
 
