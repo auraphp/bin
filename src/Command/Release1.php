@@ -417,8 +417,8 @@ class Release1 extends AbstractCommand
 
     protected function commit()
     {
-        // switch to master
-        $this->shell('git checkout master');
+        // switch to 1.x
+        $this->shell('git checkout 1.x');
 
         // copy over existing composer.json because we get so many merge
         // conflicts each time, then commit it
@@ -443,7 +443,7 @@ class Release1 extends AbstractCommand
         // push tagged version
         $this->shell('git push --tags');
 
-        // push master
+        // push 1.x
         $this->shell('git push');
 
         // back to original branch
