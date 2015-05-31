@@ -3,13 +3,17 @@ namespace Aura\Bin\Command;
 
 class PackagesJson extends AbstractCommand
 {
-    protected $json = array();
+    protected $json = array(
+        '1.x' => array(),
+        '2.x' => array(),
+        '3.x' => array(),
+    );
 
     public function __invoke()
     {
         $repos = $this->getRepos();
         foreach ($repos as $repo) {
-            $this->addPackage($repo);
+            $this->addPackages($repo);
         }
         $this->stdio->outln(json_encode($this->json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
     }
@@ -26,25 +30,39 @@ class PackagesJson extends AbstractCommand
         return $repos;
     }
 
-    protected function addPackage($repo)
+    protected function addPackages($repo)
     {
-        $composer = $this->getComposer($repo);
-        $key = substr($repo->name, 5);
-        $this->json[$key] = array(
+        $tags = $this->github->getTags($repo->name);
+        arsort($tags);
+        foreach ($tags as $tag) {
+            $this->addPackage($repo, $tag);
+        }
+    }
+
+    protected function addPackage($repo, $tag)
+    {
+        $shortName = substr($repo->name, 5);
+        $version = $tag->name;
+        $branch = ((int) $version) . '.x';
+        if ($branch == '0.x' || isset($this->json[$branch][$shortName])) {
+            return;
+        }
+
+        $composer = $this->getComposer($repo, $version);
+        $this->json[$branch][$shortName] = array(
             'type' => $this->getType($repo->name),
-            'version' => $this->getVersion($repo->name),
-            'github' => "https://github.com/auraphp/{$repo->name}",
+            'version' => $version,
+            'github' => "https://github.com/auraphp/{$repo->name}/tree/{$branch}",
             'composer' => $composer->name,
             'description' => $composer->description
         );
     }
 
-    protected function getComposer($repo)
+    protected function getComposer($repo, $version)
     {
         $name = $repo->name;
-        $branch = $repo->default_branch;
         return json_decode(file_get_contents(
-            "https://raw.github.com/auraphp/{$name}/{$branch}/composer.json"
+            "https://raw.github.com/auraphp/{$name}/{$version}/composer.json"
         ));
     }
 
