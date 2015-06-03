@@ -44,6 +44,15 @@ class Common extends Config
         $di->setter['Aura\Bin\Command\Release2']['setTweeter'] = $di->lazyNew('Aura\Bin\Tweeter');
 
         /**
+         * Aura\Bin\Command\Release3
+         */
+        $di->setter['Aura\Bin\Command\Release3']['setPhpdoc'] = $di->lazyNew('Aura\Bin\Shell\Phpdoc');
+        $di->setter['Aura\Bin\Command\Release3']['setPhpunit'] = $di->lazyNew('Aura\Bin\Shell\Phpunit');
+        $di->setter['Aura\Bin\Command\Release3']['setMailer'] = $di->lazyNew('Aura\Bin\Mailer');
+        $di->setter['Aura\Bin\Command\Release3']['setIronMQ'] = $di->lazyNew('IronMQ\IronMQ');
+        $di->setter['Aura\Bin\Command\Release3']['setTweeter'] = $di->lazyNew('Aura\Bin\Tweeter');
+
+        /**
          * Aura\Bin\Config
          */
         $di->params['Aura\Bin\Config']['env'] = $_ENV;
@@ -124,6 +133,7 @@ class Common extends Config
             'packagist'          => $di->lazyNew('Aura\Bin\Command\Packagist'),
             'release1'           => $di->lazyNew('Aura\Bin\Command\Release1'),
             'release2'           => $di->lazyNew('Aura\Bin\Command\Release2'),
+            'release3'           => $di->lazyNew('Aura\Bin\Command\Release3'),
             'readme'             => $di->lazyNew('Aura\Bin\Command\Readme'),
             'repos'              => $di->lazyNew('Aura\Bin\Command\Repos'),
             'send-email'         => $di->lazyNew('Aura\Bin\Command\SendEmail'),
