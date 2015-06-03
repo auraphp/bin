@@ -14,14 +14,14 @@ class LogSinceRelease extends AbstractCommand
             chdir($dir);
         }
 
-        $version = $this->gitLastVersion();
+        $branch = $this->gitCurrentBranch();
+        $version = $this->gitLastVersion($branch);
 
         exec("git show {$version}", $output, $return);
         $date = date('r', $this->gitDateToTimestamp($output) + 1);
 
         $package = basename(getcwd());
-        $branch = $this->gitCurrentBranch();
-        $message = "Last release was {$version} on {$date}";
+        $message = "Last {$branch} release was {$version} on {$date}";
 
         $this->stdio->outln("$package $branch");
         $this->stdio->outln($message);
@@ -34,10 +34,17 @@ class LogSinceRelease extends AbstractCommand
         }
     }
 
-    protected function gitLastVersion()
+    protected function gitLastVersion($branch)
     {
+        $branch = (int) $branch;
+
         exec('git tag --list', $versions);
         usort($versions, 'version_compare');
-        return end($versions);
+        rsort($versions);
+        foreach ($versions as $version) {
+            if ((int) $version === $branch) {
+                return $version;
+            }
+        }
     }
 }
