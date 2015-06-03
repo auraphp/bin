@@ -21,11 +21,9 @@ class Phpunit extends AbstractShell
 
         $composer = json_decode(file_get_contents('./composer.json'));
 
-        $install = isset($composer->{'require-dev'})
-                || substr($package, -7) == '_Kernel'
-                || substr($package, -8) == '_Project';
-
-        if ($install && ! file_exists('./vendor/autoload.php')) {
+        if (file_exists('./vendor/autoload.php')) {
+            $this('composer update');
+        } else {
             $this('composer install');
         }
 

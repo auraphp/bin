@@ -88,8 +88,8 @@ class Common extends Config
         );
 
         // Send email notifications
-        $di->setter['Aura\Bin\Command\SendEmailNotification']['setIronMQ'] = $di->lazyNew('IronMQ\IronMQ');
-        $di->setter['Aura\Bin\Command\SendEmailNotification']['setMailer'] = $di->lazyNew('Aura\Bin\Mailer');
+        $di->setter['Aura\Bin\Command\SendEmail']['setIronMQ'] = $di->lazyNew('IronMQ\IronMQ');
+        $di->setter['Aura\Bin\Command\SendEmail']['setMailer'] = $di->lazyNew('Aura\Bin\Mailer');
     }
 
     public function modify(Container $di)
