@@ -1,55 +1,69 @@
 <?php
 namespace Aura\Bin\Command;
 
+// aura packages-json
+// aura packages-json Aura.OnlyThisRepo
 class PackagesJson extends AbstractCommand
 {
-    protected $json = array(
-        '3.x' => array(),
-        '2.x' => array(),
-        '1.x' => array(),
-    );
+    protected $json = array();
 
     public function __invoke()
     {
-        $repos = $this->getRepos();
+        $argv = $this->getArgv();
+        $only_name = array_shift($argv);
+
+        $file = $this->config->site_dir . '/packages.json';
+        $this->json = json_decode(file_get_contents($file));
+
+        $repos = $this->getRepos($only_name);
         foreach ($repos as $repo) {
-            $this->addPackages($repo);
+            $this->updatePackages($repo);
         }
         $this->stdio->outln(json_encode($this->json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
     }
 
-    protected function getRepos()
+    protected function getRepos($only_name)
     {
         $repos = $this->github->getRepos();
+
+        if ($only_name) {
+            if (isset($repos[$only_name])) {
+                return array($only_name => $repos[$only_name]);
+            }
+            // only repo does not exist
+            return;
+        }
+
         foreach ($repos as $name => $repo) {
             $is_package = substr($name, 0, 5) == 'Aura.';
             if (! $is_package) {
                 unset($repos[$name]);
             }
         }
+
         return $repos;
     }
 
-    protected function addPackages($repo)
+    protected function updatePackages($repo)
     {
         $tags = $this->github->getTags($repo->name);
         arsort($tags);
         foreach ($tags as $tag) {
-            $this->addPackage($repo, $tag);
+            $this->updatePackage($repo, $tag);
         }
     }
 
-    protected function addPackage($repo, $tag)
+    protected function updatePackage($repo, $tag)
     {
         $shortName = substr($repo->name, 5);
         $version = $tag->name;
         $branch = ((int) $version) . '.x';
-        if ($branch == '0.x' || isset($this->json[$branch][$shortName])) {
+        if ($branch == '0.x' || isset($this->json->$branch->$shortName)) {
             return;
         }
 
         $composer = $this->getComposer($repo, $version);
-        $this->json[$branch][$shortName] = array(
+        $this->json->$branch->$shortName = (object) array(
             'type' => $this->getType($repo->name),
             'version' => $version,
             'github' => "https://github.com/auraphp/{$repo->name}",
