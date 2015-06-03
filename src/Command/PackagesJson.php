@@ -4,9 +4,9 @@ namespace Aura\Bin\Command;
 class PackagesJson extends AbstractCommand
 {
     protected $json = array(
-        '1.x' => array(),
-        '2.x' => array(),
         '3.x' => array(),
+        '2.x' => array(),
+        '1.x' => array(),
     );
 
     public function __invoke()
