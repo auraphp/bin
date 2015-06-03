@@ -52,7 +52,7 @@ class PackagesJson extends AbstractCommand
         $this->json[$branch][$shortName] = array(
             'type' => $this->getType($repo->name),
             'version' => $version,
-            'github' => "https://github.com/auraphp/{$repo->name}/tree/{$branch}",
+            'github' => "https://github.com/auraphp/{$repo->name}",
             'composer' => $composer->name,
             'description' => $composer->description
         );
