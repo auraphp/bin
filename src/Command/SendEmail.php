@@ -13,7 +13,7 @@ class SendEmail extends AbstractCommand
     public function __invoke()
     {
         $queue_name = 'notifications';
-        // Fetch 30 notifications
+
         $messages = $this->ironmq->getMessages($queue_name, 30);
         $message_ids = array();
         $emailbody = '';
@@ -21,7 +21,7 @@ class SendEmail extends AbstractCommand
             foreach ($messages as $message) {
                 $data = json_decode($message->body);
                 $emailbody .= "{$data->package} version {$data->version}, with these changes:" . PHP_EOL;
-                $emailbody .= $data->changes . PHP_EOL;
+                $emailbody .= PHP_EOL . $data->changes . PHP_EOL;
                 $message_ids[] = $message->id;
             }
             if ($this->sendEmail($emailbody)) {
