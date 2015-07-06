@@ -300,6 +300,7 @@ class Release2 extends AbstractCommand
 
     protected function followupEmailToQueue()
     {
+        $this->stdio->out('Queuing an email to the mailing list ... ');
         $changes = trim(file_get_contents('CHANGES.md'));
         $data = array(
             'package' => $this->package,
