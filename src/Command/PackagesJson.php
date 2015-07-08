@@ -13,13 +13,27 @@ class PackagesJson extends AbstractCommand
         $only_name = array_shift($argv);
 
         $file = $this->config->site_dir . '/packages.json';
-        $this->json = json_decode(file_get_contents($file));
+        $this->stdio->outln('Reading from ' . $file);
+        $this->json = json_decode(file_get_contents($file), true);
 
+        $this->stdio->out('Getting repos ... ');
         $repos = $this->getRepos($only_name);
+        $this->stdio->outln('done.');
+
         foreach ($repos as $repo) {
+            $this->stdio->out("Updating {$repo->name} ... ");
             $this->updatePackages($repo);
+            $this->stdio->outln('done.');
         }
-        $this->stdio->outln(json_encode($this->json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+        foreach ($this->json as $branch => &$packages) {
+            ksort($packages);
+        }
+        $json = json_encode($this->json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+
+        $this->stdio->outln('Writing to ' . $file);
+        file_put_contents($file, $json . PHP_EOL);
+        $this->stdio->outln('Done!');
     }
 
     protected function getRepos($only_name)
@@ -48,6 +62,13 @@ class PackagesJson extends AbstractCommand
     {
         $tags = $this->github->getTags($repo->name);
         arsort($tags);
+
+        $shortName = substr($repo->name, 5);
+        $branches = array_keys($this->json);
+        foreach ($branches as $branch) {
+            unset($this->json[$branch][$shortName]);
+        }
+
         foreach ($tags as $tag) {
             $this->updatePackage($repo, $tag);
         }
@@ -58,12 +79,12 @@ class PackagesJson extends AbstractCommand
         $shortName = substr($repo->name, 5);
         $version = $tag->name;
         $branch = ((int) $version) . '.x';
-        if ($branch == '0.x' || isset($this->json->$branch->$shortName)) {
+        if ($branch == '0.x' || isset($this->json[$branch][$shortName])) {
             return;
         }
 
         $composer = $this->getComposer($repo, $version);
-        $this->json->$branch->$shortName = (object) array(
+        $this->json[$branch][$shortName] = array(
             'type' => $this->getType($repo->name),
             'version' => $version,
             'github' => "https://github.com/auraphp/{$repo->name}",
