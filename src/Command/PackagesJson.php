@@ -61,7 +61,6 @@ class PackagesJson extends AbstractCommand
     protected function updatePackages($repo)
     {
         $tags = $this->github->getTags($repo->name);
-        arsort($tags);
 
         $shortName = substr($repo->name, 5);
         $branches = array_keys($this->json);
@@ -69,7 +68,8 @@ class PackagesJson extends AbstractCommand
             unset($this->json[$branch][$shortName]);
         }
 
-        foreach ($tags as $tag) {
+        // work through tags last-to-first
+        while ($tag = array_pop($tags)) {
             $this->updatePackage($repo, $tag);
         }
     }
