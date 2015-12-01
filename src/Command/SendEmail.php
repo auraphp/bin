@@ -25,7 +25,7 @@ class SendEmail extends AbstractCommand
                 $message_ids[] = $message->id;
             }
             if ($this->sendEmail($emailbody)) {
-                $this->ironmq->deleteMessages($queue_name, $message_ids);
+                $this->ironmq->deleteMessages($queue_name, $messages);
             }
         }
     }
