@@ -67,6 +67,8 @@ without compromising flexibility. For specifics, please examine the package
 [![Code Coverage](https://scrutinizer-ci.com/g/auraphp/{PACKAGE}/badges/coverage.png?b=3.x)](https://scrutinizer-ci.com/g/auraphp/{PACKAGE}/)
 [![Build Status](https://travis-ci.org/auraphp/{PACKAGE}.png?branch=3.x)](https://travis-ci.org/auraphp/{PACKAGE})
 
+This project adheres to [Semantic Versioning](http://semver.org/).
+
 To run the unit tests at the command line, issue `composer install` and then
 `phpunit` at the package root. This requires [Composer][] to be available as
 `composer`, and [PHPUnit][] to be available as `phpunit`.
