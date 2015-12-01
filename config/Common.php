@@ -94,6 +94,7 @@ class Common extends Config
         $di->params['IronMQ\IronMQ']['config'] = array(
             "token" => $_ENV['AURA_BIN_IRON_TOKEN'],
             "project_id" => $_ENV['AURA_BIN_IRON_PROJECT_ID'],
+            "host" => $_ENV['AURA_BIN_IRON_HOST'],
         );
 
         // Send email notifications

@@ -17,7 +17,7 @@
         "josegonzalez/dotenv": "~0.0",
         "swiftmailer/swiftmailer": "~5.0",
         "ricardoper/twitteroauth": "~2.0",
-        "iron-io/iron_mq": "~2.0"
+        "iron-io/iron_mq": "~4.0"
     },
     "autoload": {
         "psr-4": {
