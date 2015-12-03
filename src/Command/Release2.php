@@ -37,8 +37,6 @@ class Release2 extends AbstractCommand
 
     protected $phpunit;
 
-    protected $mailer;
-
     protected $ironmq;
 
     protected $tweeter;
@@ -51,11 +49,6 @@ class Release2 extends AbstractCommand
     public function setPhpunit($phpunit)
     {
         $this->phpunit = $phpunit;
-    }
-
-    public function setMailer($mailer)
-    {
-        $this->mailer = $mailer;
     }
 
     public function setIronMQ($ironmq)
@@ -293,7 +286,6 @@ class Release2 extends AbstractCommand
         $this->stdio->outln('Getting the tagged release.');
         $this->shell('git pull');
 
-        // $this->followupEmail();
         $this->followupEmailToQueue();
         $this->followupTweet();
     }
@@ -308,31 +300,6 @@ class Release2 extends AbstractCommand
             'changes' => $changes
         );
         $this->ironmq->postMessage('notifications', json_encode($data));
-    }
-
-    protected function followupEmail()
-    {
-        $this->stdio->out('Notifying the mailing list ... ');
-
-        $to = 'auraphp@googlegroups.com';
-        $subject = "New Release: {$this->package} {$this->version}";
-        $changes = trim(file_get_contents('CHANGES.md'));
-        $body = <<<BODY
-Hi everyone!
-
-We have just released {$this->package} version {$this->version}. You can get it from the usual location at <https://github.com/auraphp/{$this->package}/releases>, or update `composer.json` with the new version number.
-
-{$changes}
-
-Please let us know if you have any questions, comments, or concerns about this or any other release.  And thanks, as always, for supporting Aura!
-
-BODY;
-        $result = $this->mailer->send($to, $subject, $body);
-        if (! $result) {
-            $this->stdio->outln('failure.');
-        } else {
-            $this->stdio->outln('success.');
-        }
     }
 
     protected function followupTweet()

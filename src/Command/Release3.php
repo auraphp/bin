@@ -36,8 +36,6 @@ class Release3 extends AbstractCommand
 
     protected $phpunit;
 
-    protected $mailer;
-
     protected $ironmq;
 
     protected $tweeter;
@@ -50,11 +48,6 @@ class Release3 extends AbstractCommand
     public function setPhpunit($phpunit)
     {
         $this->phpunit = $phpunit;
-    }
-
-    public function setMailer($mailer)
-    {
-        $this->mailer = $mailer;
     }
 
     public function setIronMQ($ironmq)

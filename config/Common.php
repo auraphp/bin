@@ -39,7 +39,6 @@ class Common extends Config
          */
         $di->setter['Aura\Bin\Command\Release2']['setPhpdoc'] = $di->lazyNew('Aura\Bin\Shell\Phpdoc');
         $di->setter['Aura\Bin\Command\Release2']['setPhpunit'] = $di->lazyNew('Aura\Bin\Shell\Phpunit');
-        $di->setter['Aura\Bin\Command\Release2']['setMailer'] = $di->lazyNew('Aura\Bin\Mailer');
         $di->setter['Aura\Bin\Command\Release2']['setIronMQ'] = $di->lazyNew('IronMQ\IronMQ');
         $di->setter['Aura\Bin\Command\Release2']['setTweeter'] = $di->lazyNew('Aura\Bin\Tweeter');
 
@@ -48,7 +47,6 @@ class Common extends Config
          */
         $di->setter['Aura\Bin\Command\Release3']['setPhpdoc'] = $di->lazyNew('Aura\Bin\Shell\Phpdoc');
         $di->setter['Aura\Bin\Command\Release3']['setPhpunit'] = $di->lazyNew('Aura\Bin\Shell\Phpunit');
-        $di->setter['Aura\Bin\Command\Release3']['setMailer'] = $di->lazyNew('Aura\Bin\Mailer');
         $di->setter['Aura\Bin\Command\Release3']['setIronMQ'] = $di->lazyNew('IronMQ\IronMQ');
         $di->setter['Aura\Bin\Command\Release3']['setTweeter'] = $di->lazyNew('Aura\Bin\Tweeter');
 
