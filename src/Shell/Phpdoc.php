@@ -52,9 +52,13 @@ class Phpdoc extends AbstractShell
 
         // are there other invalidities?
         foreach ($output as $line) {
+            // this line indicates the end of parsing
+            if (substr($line, 0, 41) == 'Transform analyzed project into artifacts') {
+                break;
+            }
             // invalid lines have 2-space indents
             if (substr($line, 0, 2) == '  ') {
-                throw new Exception('API docs not valid.');
+                throw new Exception('API docs not valid:' . PHP_EOL . $line);
             }
         }
 
