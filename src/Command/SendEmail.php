@@ -20,8 +20,8 @@ class SendEmail extends AbstractCommand
         if (! empty($messages)) {
             foreach ($messages as $message) {
                 $data = json_decode($message->body);
-                $emailbody .= "{$data->package} version {$data->version}, with these changes:" . PHP_EOL;
-                $emailbody .= PHP_EOL . $data->changes . PHP_EOL;
+                $emailbody .= "### {$data->package} version {$data->version}, with these changes:" . PHP_EOL;
+                $emailbody .= PHP_EOL . $data->changes . PHP_EOL . PHP_EOL;
                 $message_ids[] = $message->id;
             }
             if ($this->sendEmail($emailbody)) {
