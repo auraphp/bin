@@ -139,8 +139,8 @@ class Release2 extends AbstractCommand
         $this->stdio->outln('Checking the change log.');
 
         // read the log for the src dir
-        $this->stdio->outln('Last log on src/ :');
-        $this->shell('git log -1 src', $output, $return);
+        $this->stdio->outln('Last log:');
+        $this->shell('git log -1', $output, $return);
         $src_timestamp = $this->gitDateToTimestamp($output);
 
         // now read the log for meta/changes.txt
@@ -286,8 +286,8 @@ class Release2 extends AbstractCommand
         $this->stdio->outln('Getting the tagged release.');
         $this->shell('git pull');
 
-        $this->followupEmailToQueue();
-        $this->followupTweet();
+        // $this->followupEmailToQueue();
+        // $this->followupTweet();
     }
 
     protected function followupEmailToQueue()

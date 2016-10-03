@@ -138,8 +138,8 @@ class Release3 extends AbstractCommand
         $this->stdio->outln('Checking the change log.');
 
         // read the log for the src dir
-        $this->stdio->outln('Last log on src/ :');
-        $this->shell('git log -1 src', $output, $return);
+        $this->stdio->outln('Last log :');
+        $this->shell('git log -1', $output, $return);
         $src_timestamp = $this->gitDateToTimestamp($output);
 
         // now read the log for meta/changes.txt
@@ -151,7 +151,7 @@ class Release3 extends AbstractCommand
         if ($src_timestamp > $changes_timestamp) {
             $since = date('D M j H:i:s Y', $changes_timestamp);
             $this->stdio->outln('');
-            $this->stdio->outln('File CHANGES.md is older than src/ .');
+            $this->stdio->outln('File CHANGES.md is older than last commit.');
             $this->stdio->outln("Add changes from the log ...");
             $this->stdio->outln("    git log --name-only --since='$since' --reverse");
             $this->stdio->outln('... then commit the CHANGES.md file.');
@@ -269,8 +269,8 @@ class Release3 extends AbstractCommand
         $this->stdio->outln('Getting the tagged release.');
         $this->shell('git pull');
 
-        $this->followupEmailToQueue();
-        $this->followupTweet();
+        // $this->followupEmailToQueue();
+        // $this->followupTweet();
     }
 
     protected function followupEmailToQueue()
