@@ -35,7 +35,7 @@ class CreateChangelog extends AbstractCommand
 
     protected function getChanges($version)
     {
-        if (version_compare($version, '2.0.0-beta', '>=')) {
+        if (version_compare($version, '2.0.0-alpha', '>=')) {
             // >= 2.0.0
             $file = 'CHANGES.md';
         } else {
