@@ -113,7 +113,7 @@ class Release3 extends AbstractCommand
     {
         $files = array(
             '.travis.yml',
-            'CHANGES.md',
+            'CHANGELOG.md',
             'CONTRIBUTING.md',
             'LICENSE',
             'README.md',
@@ -143,18 +143,18 @@ class Release3 extends AbstractCommand
         $src_timestamp = $this->gitDateToTimestamp($output);
 
         // now read the log for meta/changes.txt
-        $this->stdio->outln('Last log on CHANGES.md:');
-        $this->shell('git log -1 CHANGES.md', $output, $return);
+        $this->stdio->outln('Last log on CHANGELOG.md:');
+        $this->shell('git log -1 CHANGELOG.md', $output, $return);
         $changes_timestamp = $this->gitDateToTimestamp($output);
 
         // which is older?
         if ($src_timestamp > $changes_timestamp) {
             $since = date('D M j H:i:s Y', $changes_timestamp);
             $this->stdio->outln('');
-            $this->stdio->outln('File CHANGES.md is older than last commit.');
+            $this->stdio->outln('File CHANGELOG.md is older than last commit.');
             $this->stdio->outln("Add changes from the log ...");
             $this->stdio->outln("    git log --name-only --since='$since' --reverse");
-            $this->stdio->outln('... then commit the CHANGES.md file.');
+            $this->stdio->outln('... then commit the CHANGELOG.md file.');
             return false;
         }
 
@@ -252,7 +252,7 @@ class Release3 extends AbstractCommand
             'tag_name' => $this->version,
             'target_commitish' => $this->branch,
             'name' => $this->version,
-            'body' => file_get_contents('CHANGES.md'),
+            'body' => $this->getChangeLogContents();,
             'draft' => false,
             'prerelease' => false,
         );
@@ -276,7 +276,7 @@ class Release3 extends AbstractCommand
     protected function followupEmailToQueue()
     {
         $this->stdio->out('Queuing an email to the mailing list ... ');
-        $changes = trim(file_get_contents('CHANGES.md'));
+        $changes = trim($this->getChangeLogContents(););
         $data = array(
             'package' => $this->package,
             'version' => $this->version,
