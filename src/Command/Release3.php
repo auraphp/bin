@@ -252,7 +252,7 @@ class Release3 extends AbstractCommand
             'tag_name' => $this->version,
             'target_commitish' => $this->branch,
             'name' => $this->version,
-            'body' => $this->getChangeLogContents();,
+            'body' => $this->getChangeLogContents(),
             'draft' => false,
             'prerelease' => false,
         );
@@ -276,7 +276,7 @@ class Release3 extends AbstractCommand
     protected function followupEmailToQueue()
     {
         $this->stdio->out('Queuing an email to the mailing list ... ');
-        $changes = trim($this->getChangeLogContents(););
+        $changes = trim($this->getChangeLogContents());
         $data = array(
             'package' => $this->package,
             'version' => $this->version,
