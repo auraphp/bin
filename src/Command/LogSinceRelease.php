@@ -5,15 +5,7 @@ class LogSinceRelease extends AbstractCommand
 {
     public function __invoke()
     {
-        $argv = $this->getArgv();
-
-        $orig = null;
-        $dir = array_shift($argv);
-        if ($dir) {
-            $orig = getcwd();
-            chdir($dir);
-        }
-
+        exec("git pull");
         $branch = $this->gitCurrentBranch();
         $version = $this->gitLastVersion($branch);
 
@@ -23,15 +15,13 @@ class LogSinceRelease extends AbstractCommand
         $package = basename(getcwd());
         $message = "Last {$branch} release was {$version} on {$date}";
 
+        $this->stdio->outln("============================================================");
         $this->stdio->outln("$package $branch");
         $this->stdio->outln($message);
         $this->stdio->outln(str_pad('', strlen($message), '-'));
         $this->stdio->outln();
         passthru("git log --name-status --reverse --after='{$date}'");
-
-        if ($orig) {
-            chdir($orig);
-        }
+        $this->stdio->outln();
     }
 
     protected function gitLastVersion($branch)
@@ -40,7 +30,7 @@ class LogSinceRelease extends AbstractCommand
 
         exec('git tag --list', $versions);
         usort($versions, 'version_compare');
-        rsort($versions);
+        $versions = array_reverse($versions);
         foreach ($versions as $version) {
             if ((int) $version === $branch) {
                 return $version;
