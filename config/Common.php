@@ -138,6 +138,7 @@ class Common extends Config
             'send-email'         => $di->lazyNew('Aura\Bin\Command\SendEmail'),
             'travis'             => $di->lazyNew('Aura\Bin\Command\Travis'),
             'create-changelog'   => $di->lazyNew('Aura\Bin\Command\CreateChangelog'),
+            'show-release-notes' => $di->lazyNew('Aura\Bin\Command\ShowReleaseNotes'),
         ));
     }
 

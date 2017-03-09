@@ -159,6 +159,8 @@ class Release3 extends AbstractCommand
         }
 
         $this->stdio->outln('Change log looks up to date.');
+        $this->stdio->outln('Release notes will be ...');
+        $this->stdio->outln($this->getReleaseNotes());
         return true;
     }
 
@@ -252,7 +254,7 @@ class Release3 extends AbstractCommand
             'tag_name' => $this->version,
             'target_commitish' => $this->branch,
             'name' => $this->version,
-            'body' => $this->getChangeLogContents(),
+            'body' => $this->getReleaseNotes(),
             'draft' => false,
             'prerelease' => false,
         );
@@ -276,7 +278,7 @@ class Release3 extends AbstractCommand
     protected function followupEmailToQueue()
     {
         $this->stdio->out('Queuing an email to the mailing list ... ');
-        $changes = trim($this->getChangeLogContents());
+        $changes = trim($this->getReleaseNotes());
         $data = array(
             'package' => $this->package,
             'version' => $this->version,

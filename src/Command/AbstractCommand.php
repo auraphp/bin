@@ -79,12 +79,10 @@ abstract class AbstractCommand
         return (bool) $matches;
     }
 
-    protected function getChangeLogContents()
+    protected function getReleaseNotes()
     {
         if (preg_match('/##\s(\d+.\d+.\d+)(-(dev|alpha\d+|beta\d+|RC\d+))?([\s\S]*?)##\s(\d+.\d+.\d+)(-(dev|alpha\d+|beta\d+|RC\d+))?/s', file_get_contents('CHANGELOG.md'), $matches, PREG_OFFSET_CAPTURE, 1)) {
-            return $matches[4][0];
+            return trim($matches[4][0]) . PHP_EOL;
         }
-
-        $this->stdio->outln('Changes not found in CHANGELOG.md.');
     }
 }
