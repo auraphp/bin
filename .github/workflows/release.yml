@@ -1,0 +1,301 @@
+# Reusable release workflow for Aura packages.
+#
+# The workflow creates the tag; the tag does not trigger the workflow. This is
+# deliberate. Packagist derives package versions from git tags, not from GitHub
+# releases, so a pushed tag is already a published version -- checks that run
+# after a tag push cannot un-publish anything. Here the tag is created at the
+# very end, from the exact commit that passed the checks, so a failed release
+# leaves no trace at all.
+#
+# A package opts in with a small caller workflow; see
+# templates/package-release.yml in this repo. Releasing then means running that
+# workflow against the branch you want to release:
+#
+#     gh workflow run release.yml --ref 6.x -f version=6.0.0
+#
+# ...or picking the branch and version from the Actions tab.
+
+name: Release
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: 'Version to release, e.g. 6.0.0 or 6.1.0-RC1.'
+        type: string
+        required: true
+      php-version:
+        description: 'PHP version used for the pre-release test run.'
+        type: string
+        default: '8.4'
+      extensions:
+        description: 'Extra PHP extensions for the test run, comma separated.'
+        type: string
+        default: ''
+      run-tests:
+        description: 'Run the test suite before releasing.'
+        type: boolean
+        default: true
+      test-command:
+        description: 'Command used to run the tests.'
+        type: string
+        default: './vendor/bin/phpunit'
+      changelog-file:
+        description: 'Change log path. Empty means CHANGELOG.md, then CHANGES.md.'
+        type: string
+        default: ''
+    outputs:
+      version:
+        description: 'The released version.'
+        value: ${{ jobs.release.outputs.version }}
+      url:
+        description: 'URL of the published release.'
+        value: ${{ jobs.release.outputs.url }}
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    name: Release ${{ inputs.version }}
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      url: ${{ steps.publish.outputs.url }}
+
+    steps:
+      - name: Check this was dispatched against a branch
+        if: github.ref_type != 'branch'
+        run: |
+          echo "::error::Run this against the branch you are releasing (for example 6.x),"
+          echo "::error::not a tag. The workflow creates the tag itself."
+          exit 1
+
+      - name: Validate the version
+        id: version
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+
+          if ! printf '%s' "$VERSION" \
+              | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-(dev|alpha[0-9]+|beta[0-9]+|RC[0-9]+))?$'; then
+            echo "::error::Version '${VERSION}' is not valid."
+            echo "::error::Use '1.2.3', optionally suffixed with -dev, -alpha1, -beta1 or -RC1."
+            exit 1
+          fi
+
+          # Anything with a suffix is a pre-release, so it does not become the
+          # "latest" release on GitHub and Composer treats it as unstable.
+          prerelease=false
+          case "$VERSION" in
+            *-*) prerelease=true ;;
+          esac
+
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "prerelease=${prerelease}" >> "$GITHUB_OUTPUT"
+          echo "Preparing ${VERSION} from ${GITHUB_REF_NAME} (prerelease: ${prerelease})"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      # Fail before doing any real work if the version is already taken.
+      - name: Check the version is not already released
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          if git ls-remote --exit-code --tags origin "refs/tags/${VERSION}" >/dev/null 2>&1; then
+            echo "::error::Tag ${VERSION} already exists. Composer already serves this version;"
+            echo "::error::pick the next version rather than replacing it."
+            exit 1
+          fi
+
+          if gh release view "$VERSION" >/dev/null 2>&1; then
+            echo "::error::A GitHub release named ${VERSION} already exists."
+            exit 1
+          fi
+
+          echo "${VERSION} is available."
+
+      - name: Locate the change log
+        id: changelog
+        env:
+          GIVEN: ${{ inputs.changelog-file }}
+        run: |
+          set -euo pipefail
+
+          file=""
+          if [ -n "$GIVEN" ]; then
+            file="$GIVEN"
+          else
+            # Packages disagree on the name; take whichever one is present.
+            for candidate in CHANGELOG.md CHANGES.md; do
+              if [ -r "$candidate" ]; then
+                file="$candidate"
+                break
+              fi
+            done
+          fi
+
+          if [ -z "$file" ] || [ ! -r "$file" ]; then
+            echo "::error::No readable change log (looked for CHANGELOG.md and CHANGES.md)."
+            exit 1
+          fi
+
+          echo "file=${file}" >> "$GITHUB_OUTPUT"
+          echo "Using ${file}"
+
+      - name: Take the release notes from the change log
+        id: notes
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          CHANGELOG: ${{ steps.changelog.outputs.file }}
+        run: |
+          set -euo pipefail
+
+          # Version headings are '# 1.2.3' in some packages and '## 1.2.3' in
+          # others, and may carry a trailing note such as '(unreleased)'.
+          heading="$(awk '/^## [0-9]/ || /^# [0-9]/ { sub(/^#+[ ]*/, ""); print; exit }' "$CHANGELOG")"
+
+          if [ -z "$heading" ]; then
+            echo "::error::${CHANGELOG} has no version heading to release from."
+            exit 1
+          fi
+
+          top="$(printf '%s' "$heading" | awk '{ print $1 }')"
+
+          if [ "$top" != "$VERSION" ]; then
+            echo "::error::${CHANGELOG} heads with version '${top}', but you asked to release '${VERSION}'."
+            echo "::error::Update the change log heading, or release ${top} instead."
+            exit 1
+          fi
+
+          if printf '%s' "$heading" | grep -qi 'unreleased'; then
+            echo "::error::The ${VERSION} heading in ${CHANGELOG} is still marked unreleased."
+            echo "::error::Drop that marker and commit before releasing."
+            exit 1
+          fi
+
+          # Everything between this version heading and the next one, with
+          # blank lines trimmed off both ends.
+          awk '
+            /^## [0-9]/ || /^# [0-9]/ { if (seen) exit; seen = 1; next }
+            seen { print }
+          ' "$CHANGELOG" | awk '
+            { lines[NR] = $0 }
+            END {
+              first = 1; last = NR;
+              while (first <= last && lines[first] ~ /^[ \t]*$/) first++;
+              while (last >= first && lines[last] ~ /^[ \t]*$/) last--;
+              for (i = first; i <= last; i++) print lines[i];
+            }' > release-notes.md
+
+          if [ ! -s release-notes.md ]; then
+            echo "::error::The ${VERSION} section of ${CHANGELOG} is empty."
+            exit 1
+          fi
+
+          echo "Release notes:"
+          sed 's/^/  | /' release-notes.md
+
+      - name: Setup PHP ${{ inputs.php-version }}
+        if: inputs.run-tests
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ inputs.php-version }}
+          extensions: ${{ inputs.extensions }}
+          coverage: none
+          tools: composer:v2
+
+      - name: Get composer cache directory
+        if: inputs.run-tests
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache dependencies
+        if: inputs.run-tests
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.json') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        if: inputs.run-tests
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Validate composer.json
+        if: inputs.run-tests
+        run: composer validate --no-check-lock --no-check-publish
+
+      # A sanity gate only. The full matrix already ran on this commit via the
+      # package's own CI; this is here so a broken tree cannot become a tag.
+      - name: Run the test suite
+        if: inputs.run-tests
+        run: ${{ inputs.test-command }}
+
+      # Everything above passed, so it is now safe to create the tag. Targeting
+      # the exact SHA that was checked out, rather than the branch name, means
+      # the tag points at precisely what was tested even if someone pushed to
+      # the branch while this was running.
+      - name: Tag and publish the release
+        id: publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          VERSION: ${{ steps.version.outputs.version }}
+          PRERELEASE: ${{ steps.version.outputs.prerelease }}
+          TARGET: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          flags=""
+          if [ "$PRERELEASE" = "true" ]; then
+            flags="--prerelease"
+          fi
+
+          # shellcheck disable=SC2086
+          url="$(gh release create "$VERSION" \
+            --target "$TARGET" \
+            --title "$VERSION" \
+            --notes-file release-notes.md \
+            $flags)"
+
+          echo "url=${url}" >> "$GITHUB_OUTPUT"
+          echo "Published ${url}"
+
+      - name: Summarize
+        if: always()
+        env:
+          VERSION: ${{ inputs.version }}
+          URL: ${{ steps.publish.outputs.url }}
+          TARGET: ${{ github.sha }}
+        run: |
+          {
+            if [ -n "$URL" ]; then
+              echo "## Released ${VERSION}"
+              echo ""
+              echo "${URL}"
+              echo ""
+              echo "Tagged at \`${TARGET}\` on \`${GITHUB_REF_NAME}\`."
+              echo ""
+              echo "### Notes"
+              echo ""
+              cat release-notes.md
+            else
+              echo "## ${VERSION} was not released"
+              echo ""
+              echo "No tag was created, so nothing reached Packagist."
+              echo "Fix the problem reported above and run this workflow again."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

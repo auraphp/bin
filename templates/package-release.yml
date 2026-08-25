@@ -1,0 +1,38 @@
+# Copy this to .github/workflows/release.yml in an Aura package.
+#
+# Releasing is then: go to Actions -> Release -> Run workflow, pick the branch
+# (for example 6.x) and type the version. Or from a terminal:
+#
+#     gh workflow run release.yml --ref 6.x -f version=6.0.0
+#
+# The workflow creates the tag itself, and only after every check has passed.
+# Nothing is tagged -- so nothing reaches Packagist -- if anything fails.
+#
+# Release notes come from this package's own CHANGELOG.md. The version you type
+# must match the version at the top of the change log.
+
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release, e.g. 6.0.0'
+        required: true
+        type: string
+
+jobs:
+  release:
+    # Pin to a tag or SHA instead of @master if you want releases to be
+    # unaffected by changes to the shared workflow.
+    uses: auraphp/bin/.github/workflows/release.yml@master
+    permissions:
+      contents: write
+    with:
+      version: ${{ inputs.version }}
+      # The rest are optional; the defaults suit most packages.
+      # php-version: '8.4'
+      # extensions: 'pdo_sqlite'
+      # test-command: './vendor/bin/phpunit'
+      # run-tests: true
+      # changelog-file: 'CHANGES.md'
