@@ -47,6 +47,12 @@ All of the workflow inputs are optional:
 3. Finds the change log, and **fails unless its top version heading matches the
    version you asked for** — so a release can never go out against the wrong
    notes. It also fails if that heading is still marked `(unreleased)`.
+
+   Pre-releases are looser on both counts, so that alphas and betas do not each
+   need a change log section of their own: `6.0.0-alpha1` is happy with a
+   `## 6.0.0` heading, and with that heading still marked `(unreleased)` —
+   which is precisely what it is while you are cutting alphas of it. Only the
+   final `6.0.0` demands an exact heading with the marker removed.
 4. Takes the release notes from that section of the change log. Headings at
    either `#` or `##` level work, and `###` subheadings inside a section are
    preserved.
@@ -120,6 +126,12 @@ To rehearse without publishing anything, run the workflow with a version whose
 change log entry does not exist yet: it will fail at the change-log check, well
 before the tag step, and you can confirm from the run summary that no tag was
 created.
+
+To rehearse the whole thing *including* the publish, cut a pre-release:
+dispatch `6.0.0-alpha1` against a branch whose change log heads with
+`## 6.0.0`. It goes out as a GitHub pre-release, so it does not become
+"latest", and Composer treats it as unstable — you get a real end-to-end run
+without committing to the final version.
 
 ## Related: producer/producer
 

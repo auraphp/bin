@@ -159,6 +159,7 @@ jobs:
         id: notes
         env:
           VERSION: ${{ steps.version.outputs.version }}
+          PRERELEASE: ${{ steps.version.outputs.prerelease }}
           CHANGELOG: ${{ steps.changelog.outputs.file }}
         run: |
           set -euo pipefail
@@ -174,16 +175,37 @@ jobs:
 
           top="$(printf '%s' "$heading" | awk '{ print $1 }')"
 
-          if [ "$top" != "$VERSION" ]; then
+          # A pre-release may be cut against the section for the version it is
+          # leading up to: 6.0.0-alpha1 is happy with a '## 6.0.0' heading, so
+          # that alphas and betas do not each need a change log section of
+          # their own. A final release must match its heading exactly.
+          base="${VERSION%%-*}"
+
+          if [ "$top" = "$VERSION" ]; then
+            echo "${CHANGELOG} heads with ${top}."
+          elif [ "$PRERELEASE" = "true" ] && [ "$top" = "$base" ]; then
+            echo "${CHANGELOG} heads with ${top}; releasing ${VERSION} against that section."
+          else
             echo "::error::${CHANGELOG} heads with version '${top}', but you asked to release '${VERSION}'."
-            echo "::error::Update the change log heading, or release ${top} instead."
+            if [ "$PRERELEASE" = "true" ]; then
+              echo "::error::A pre-release must match either '${VERSION}' or '${base}'."
+            else
+              echo "::error::Update the change log heading, or release ${top} instead."
+            fi
             exit 1
           fi
 
+          # '(unreleased)' means the final version is not out yet, which is
+          # precisely true while cutting pre-releases of it -- so it only
+          # blocks a final release.
           if printf '%s' "$heading" | grep -qi 'unreleased'; then
-            echo "::error::The ${VERSION} heading in ${CHANGELOG} is still marked unreleased."
-            echo "::error::Drop that marker and commit before releasing."
-            exit 1
+            if [ "$PRERELEASE" = "true" ]; then
+              echo "The ${top} section is marked unreleased, which is fine for ${VERSION}."
+            else
+              echo "::error::The ${VERSION} heading in ${CHANGELOG} is still marked unreleased."
+              echo "::error::Drop that marker and commit before releasing."
+              exit 1
+            fi
           fi
 
           # Everything between this version heading and the next one, with
