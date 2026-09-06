@@ -27,6 +27,16 @@ work, not for general use outside the project.
 
 ## Releases
 
+**Releasing a package is now a GitHub Actions run:** pick the branch and the
+version, and a reusable workflow in this repo runs the checks, takes the release
+notes from the package's own change log, and — only if everything passed —
+creates the tag and the release. Do not tag by hand; a tag is a published
+Composer version the moment it exists. See [RELEASING.md](RELEASING.md) for how
+to opt a package in.
+
+Everything below describes the legacy PHP commands, which still work but are no
+longer the recommended path.
+
 The release process is not as smooth or as unified as I'd like. You'll need to
 install PHPUnit and PHPDocumentor globally for the release process to work.  In
 the past I've had the release tool automatically Tweet and queue an email to the
