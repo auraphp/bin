@@ -9,7 +9,9 @@
 # Nothing is tagged -- so nothing reaches Packagist -- if anything fails.
 #
 # Release notes come from this package's own CHANGELOG.md. The version you type
-# must match the version at the top of the change log.
+# must match the version at the top of the change log -- or, for a pre-release
+# such as 6.0.0-alpha1, its base version, so that alphas and betas do not each
+# need a change log section of their own.
 
 name: Release
 
@@ -23,9 +25,10 @@ on:
 
 jobs:
   release:
-    # Pin to a tag or SHA instead of @master if you want releases to be
-    # unaffected by changes to the shared workflow.
-    uses: auraphp/bin/.github/workflows/release.yml@master
+    # Pinned to a tag, so a change to the shared workflow cannot alter this
+    # package's release path until this line is deliberately bumped. Use @master
+    # instead only if you want the package to track the workflow automatically.
+    uses: auraphp/bin/.github/workflows/release.yml@v1.0.0
     permissions:
       contents: write
     with:
